@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: msvc-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: auth-service
+          uri: lb://msvc-auth
+          predicates:
+            - Path=/auth/**
+        - id: book-service
+          uri: lb://msvc-books
+          predicates:
+            - Path=/api/products/**
+        - id: user-service
+          uri: lb://msvc-users
+          predicates:
+            - Path=/users/**
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 3600000

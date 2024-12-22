@@ -1,0 +1,25 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: microservice-config
+
+  profiles:
+    active: native  # Usar 'native' para configuraciones locales (no cambia en producción)
+
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/configurations
+        git:
+          uri: https://github.com/tu-usuario/tu-repo-config  # Si decides usar Git
+          search-paths: configurations
+          clone-on-start: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

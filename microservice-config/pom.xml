@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- POM para el microservicio Config Server -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<!-- Versión del modelo de POM -->
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- Herencia del POM padre -->
+	<parent>
+		<groupId>com.microservice</groupId>
+		<artifactId>microservices-pattern-bookstore</artifactId>
+		<version>1.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<!-- Información del microservicio -->
+	<groupId>com.microservice.config</groupId>
+	<artifactId>microservice-config</artifactId>
+	<version>1.0.0</version>
+	<packaging>jar</packaging>
+	<name>Microservice Config Server</name>
+	<description>Spring Boot Microservice Config Server</description>
+
+	<!-- Dependencias específicas del microservicio -->
+	<dependencies>
+		<!-- Spring Cloud Config Server -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-config-server</artifactId>
+		</dependency>
+
+		<!-- Spring Boot Actuator -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!-- Dependencias de prueba -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<!-- No es necesario incluir plugins aquí si ya están en el POM padre -->
+</project>

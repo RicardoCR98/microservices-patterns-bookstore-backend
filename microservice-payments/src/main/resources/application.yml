@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: msvc-payments
+
+  config:
+    import: "configserver:http://localhost:8888"

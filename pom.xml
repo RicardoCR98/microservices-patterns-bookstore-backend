@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Definición del proyecto y esquema XML -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <!-- Versión del modelo de POM -->
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Información del proyecto padre -->
+    <groupId>com.microservice</groupId> <!-- Actualizado para coincidir con los módulos hijos -->
+    <artifactId>microservices-pattern-bookstore</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>microservices-patterns-bookstore</name>
+    <description>Spring Boot Parent POM</description>
+
+    <!-- Herencia del padre de Spring Boot -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/> <!-- Busca el padre en el repositorio -->
+    </parent>
+
+    <!-- Propiedades del proyecto -->
+    <properties>
+        <!-- Versión de Java -->
+        <java.version>21</java.version>
+        <!-- Codificación de fuente del proyecto -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Versiones de Spring Cloud y otras dependencias -->
+        <spring-cloud.version>2023.0.3</spring-cloud.version>
+        <spring.boot.version>3.3.5</spring.boot.version>
+        <resilience4j.version>2.0.2</resilience4j.version>
+        <micrometer.version>1.12.3</micrometer.version>
+        <lombok.version>1.18.30</lombok.version>
+        <dotenv.version>5.2.2</dotenv.version>
+        <openapi.version>2.1.0</openapi.version>
+    </properties>
+
+    <!-- Módulos hijos (microservicios) -->
+    <modules>
+        <module>microservice-config</module>
+        <module>microservice-gateway</module>
+        <module>microservice-auth</module>
+        <module>microservice-books</module>
+        <module>microservice-orders</module>
+        <module>microservice-eureka</module>
+        <module>microservice-notifications</module>
+        <module>microservice-payments</module>
+        <module>microservice-users</module>
+    </modules>
+
+    <!-- Gestión de dependencias -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Importar dependencias de Spring Boot -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Importar el BOM de Spring Cloud -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Gestionar versiones de dependencias no cubiertas por los BOMs -->
+            <!-- Resilience4j -->
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring-boot3</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <!-- Micrometer Prometheus -->
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-registry-prometheus</artifactId>
+                <version>${micrometer.version}</version>
+            </dependency>
+            <!-- Otras dependencias específicas pueden ser gestionadas aquí -->
+            <dependency>
+                <groupId>io.github.cdimascio</groupId>
+                <artifactId>java-dotenv</artifactId>
+                <version>${dotenv.version}</version>
+            </dependency>
+            <!-- Lombok -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <!-- Springdoc OpenAPI -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${openapi.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- Plugins comunes -->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- Plugin de Spring Boot -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
+                <!-- Plugin del compilador Maven -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.10.1</version> <!-- Especifica una versión estable del plugin -->
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                        <annotationProcessorPaths>
+                            <!-- Lombok como procesador de anotaciones -->
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>
