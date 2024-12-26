@@ -1,7 +1,4 @@
 package com.microservice.auth.model;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vladmihalcea.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,7 +8,6 @@ import org.hibernate.annotations.Type;
 
 import java.sql.Timestamp;
 import java.util.Map;
-import java.util.UUID;
 
 @Data
 @AllArgsConstructor

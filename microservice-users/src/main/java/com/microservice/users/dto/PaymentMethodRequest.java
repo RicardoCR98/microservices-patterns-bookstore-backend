@@ -8,12 +8,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PaymentMethodRequest {
-    private String type;
+    private String typeCard;
     private String cardHolderName;
-    private String cardBrand;
+    private String cardNumber;
     private String last4;
     private String expirationMonth;
     private String expirationYear;
-    private Boolean defaultMethod;
-    private String token;
 }

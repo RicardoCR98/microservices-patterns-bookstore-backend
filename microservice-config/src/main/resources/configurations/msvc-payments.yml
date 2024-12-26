@@ -30,4 +30,4 @@ management:
         include: "*"
 
 server:
-    port: 8091
+    port: 8091 #No cambiar de puerto porque no se va a usar con el gateway

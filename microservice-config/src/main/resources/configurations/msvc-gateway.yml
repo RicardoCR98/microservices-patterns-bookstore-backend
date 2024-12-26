@@ -20,6 +20,10 @@ spring:
           uri: lb://msvc-users
           predicates:
             - Path=/users/**
+        - id: order-service
+          uri: lb://msvc-orders
+          predicates:
+            - Path=/api/orders/**
 eureka:
   client:
     register-with-eureka: true

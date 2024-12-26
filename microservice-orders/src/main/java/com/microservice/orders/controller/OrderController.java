@@ -27,17 +27,19 @@ public class OrderController {
         response.setStatus(order.getStatus().name());
         response.setTotal(order.getTotal());
 
-        response.setProducts(order.getItems().stream().map(oi -> {
-            CheckoutProductDto p = new CheckoutProductDto();
-            p.setId(oi.getProductId());
-            p.setName(oi.getName());
-            p.setImage(oi.getImage());
-            p.setDescription(oi.getDescription());
-            p.setQuantity(oi.getQuantity());
-            p.setOfferPrice(oi.getPrice());
-            p.setSalePrice(oi.getPrice());
-            return p;
-        }).collect(Collectors.toList()));
+        response.setProducts(
+                order.getItems().stream().map(oi -> {
+                    CheckoutProductDto p = new CheckoutProductDto();
+                    p.setId(oi.getProductId());
+                    p.setName(oi.getName());
+                    p.setImage(oi.getImage());
+                    p.setDescription(oi.getDescription());
+                    p.setQuantity(oi.getQuantity());
+                    p.setOfferPrice(oi.getPrice());
+                    p.setSalePrice(oi.getPrice());
+                    return p;
+                }).collect(Collectors.toList())
+        );
 
         return ResponseEntity.ok(response);
     }
@@ -45,23 +47,26 @@ public class OrderController {
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderResponse> getOrder(@PathVariable Long orderId) {
         Order order = orderService.getOrder(orderId);
+
         OrderResponse response = new OrderResponse();
         response.setOrderId(order.getId());
         response.setUserId(order.getUserId());
         response.setStatus(order.getStatus().name());
         response.setTotal(order.getTotal());
 
-        response.setProducts(order.getItems().stream().map(oi -> {
-            CheckoutProductDto p = new CheckoutProductDto();
-            p.setId(oi.getProductId());
-            p.setName(oi.getName());
-            p.setImage(oi.getImage());
-            p.setDescription(oi.getDescription());
-            p.setQuantity(oi.getQuantity());
-            p.setOfferPrice(oi.getPrice());
-            p.setSalePrice(oi.getPrice());
-            return p;
-        }).collect(Collectors.toList()));
+        response.setProducts(
+                order.getItems().stream().map(oi -> {
+                    CheckoutProductDto p = new CheckoutProductDto();
+                    p.setId(oi.getProductId());
+                    p.setName(oi.getName());
+                    p.setImage(oi.getImage());
+                    p.setDescription(oi.getDescription());
+                    p.setQuantity(oi.getQuantity());
+                    p.setOfferPrice(oi.getPrice());
+                    p.setSalePrice(oi.getPrice());
+                    return p;
+                }).collect(Collectors.toList())
+        );
 
         return ResponseEntity.ok(response);
     }

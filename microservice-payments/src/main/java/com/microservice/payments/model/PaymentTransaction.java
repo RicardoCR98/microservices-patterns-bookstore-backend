@@ -25,7 +25,7 @@ public class PaymentTransaction {
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 
-    private String transactionId; // Un ID interno si quieres
+    private String transactionId; // Id de la transacción
     private Instant createdAt;
     private Instant updatedAt;
 

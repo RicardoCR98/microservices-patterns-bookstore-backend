@@ -8,8 +8,8 @@ import com.microservice.payments.repositories.PaymentTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -17,47 +17,25 @@ public class PaymentService {
     private final PaymentTransactionRepository transactionRepository;
     private final PayPalService payPalService;
 
-    /**
-     * Procesa el pago capturando la orden en PayPal a partir de request.token (payPalOrderId).
-     */
     public PaymentResponse processPayment(PaymentRequest request) {
-        // 1. Guardar transacción en BD (PENDING)
+        // 1. Verificar si ya existe la transacción
+        Optional<PaymentTransaction> existingTx = transactionRepository.findByPayPalOrderId(request.getToken());
+        if (existingTx.isPresent() && existingTx.get().getStatus() == PaymentStatus.APPROVED) {
+            // ya aprobada => regreso
+            return new PaymentResponse(existingTx.get().getStatus().name(), existingTx.get().getPayPalCaptureId());
+        }
+
+        // 2. Registrar en BD con status=APPROVED, pues en front ya se capturó
         PaymentTransaction tx = new PaymentTransaction();
         tx.setAmount(request.getAmount());
-        tx.setMethod(request.getMethod());
-        tx.setPayPalOrderId(request.getToken()); // token = payPalOrderId
-        tx.setStatus(PaymentStatus.PENDING);
+        tx.setMethod(request.getMethod()); // "paypal"
+        tx.setPayPalOrderId(request.getToken());
+        tx.setStatus(PaymentStatus.APPROVED);
+        tx.setTransactionId("tx-" + UUID.randomUUID());
+        transactionRepository.save(tx);
 
-        // Generar un transactionId interno
-        String internalTxId = "tx-" + UUID.randomUUID();
-        tx.setTransactionId(internalTxId);
-
-        tx = transactionRepository.save(tx);
-
-        try {
-            // 2. Capturar la orden en PayPal
-            PayPalService.CaptureResult captureResult = payPalService.captureOrder(tx.getPayPalOrderId());
-
-            // 3. Evaluar la respuesta
-            if ("COMPLETED".equalsIgnoreCase(captureResult.status())) {
-                tx.setStatus(PaymentStatus.APPROVED);
-                tx.setPayPalCaptureId(captureResult.captureId());
-            } else {
-                // A veces PayPal puede devolver "SAVED", "APPROVED", "VOIDED", etc.
-                // Revisa la doc: https://developer.paypal.com/docs/api/orders/v2/
-                tx.setStatus(PaymentStatus.REJECTED);
-            }
-            transactionRepository.save(tx);
-
-            // 4. Devolver PaymentResponse
-            return new PaymentResponse(tx.getStatus().name(), tx.getPayPalCaptureId());
-
-        } catch (Exception e) {
-            // Si falla la captura, marcamos la transacción como REJECTED
-            tx.setStatus(PaymentStatus.REJECTED);
-            transactionRepository.save(tx);
-
-            throw new RuntimeException("Error en capturar orden PayPal: " + e.getMessage(), e);
-        }
+        // 3. Retornar la respuesta
+        return new PaymentResponse(tx.getStatus().name(), tx.getPayPalCaptureId());
     }
+
 }

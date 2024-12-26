@@ -28,7 +28,7 @@ public class PaymentMethodController {
                 pm.getLast4(),
                 pm.getExpirationMonth(),
                 pm.getExpirationYear(),
-                pm.getDefaultMethod()
+                pm.getCardNumber()
         );
         return ResponseEntity.ok(response);
     }

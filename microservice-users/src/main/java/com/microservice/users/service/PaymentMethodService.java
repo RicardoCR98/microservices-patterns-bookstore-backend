@@ -22,28 +22,19 @@ public class PaymentMethodService {
 
         PaymentMethod pm = new PaymentMethod();
         pm.setId(UUID.randomUUID().toString());
-        pm.setType(request.getType());
         pm.setCardHolderName(request.getCardHolderName());
-        pm.setCardBrand(request.getCardBrand());
         pm.setLast4(request.getLast4());
         pm.setExpirationMonth(request.getExpirationMonth());
         pm.setExpirationYear(request.getExpirationYear());
-        pm.setDefaultMethod(request.getDefaultMethod());
-        pm.setToken(request.getToken());
+        pm.setCardNumber(request.getCardNumber());
 
         if (profile.getPaymentMethods() == null) {
             profile.setPaymentMethods(List.of(pm));
         } else {
-            // Si es default, remover default de otro
-            if (Boolean.TRUE.equals(pm.getDefaultMethod())) {
-                profile.getPaymentMethods().forEach(m -> m.setDefaultMethod(false));
-            }
             profile.getPaymentMethods().add(pm);
         }
 
         repository.save(profile);
         return pm;
     }
-
-    //TODO: Agregar métodos para actualizar o eliminar metodos de pago
 }

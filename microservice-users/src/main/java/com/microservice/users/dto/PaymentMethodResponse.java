@@ -11,9 +11,9 @@ public class PaymentMethodResponse {
     private String id;
     private String type;
     private String cardHolderName;
+    private String cardNumber;
     private String cardBrand;
     private String last4;
     private String expirationMonth;
     private String expirationYear;
-    private Boolean defaultMethod;
 }

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PaymentRequest {
     private Double amount;
-    private String method; // "card", "paypal"
+    private String type; // "card", "paypal"
     private String token;  // el token seguro de la pasarela
     private Long orderId;
 }
