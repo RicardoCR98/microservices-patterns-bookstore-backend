@@ -20,7 +20,7 @@ public class Order {
     private Long userId;
     private String address; // un string con la dirección concatenada
     @Enumerated(EnumType.STRING)
-    private OrderStatus status = OrderStatus.PENDING;
+    private OrderStatus status = OrderStatus.PENDING; //PENDING, PAID, REJECTED
     private Double total;
 
     @OneToMany(mappedBy="order", cascade=CascadeType.ALL, orphanRemoval=true)

@@ -1,0 +1,54 @@
+server:
+  port: 8092
+
+spring:
+  application:
+    name: msvc-notifications
+# Configuración RabbitMQ
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+# Configuración Mail
+  mail:
+    host: smtp.gmail.com          # Por ejemplo, si usas Gmail
+    port: 587                     # TLS
+    username: garycardo98@gmail.com
+    password: xwcw rhtp ajiu zzle
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+logging:
+  level:
+    root: INFO
+    com.microservice.notifications: DEBUG
+
+app:
+  rabbitmq:
+    exchange: orders-exchange
+    queue: orders-queue
+    routingKey: orders.created
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

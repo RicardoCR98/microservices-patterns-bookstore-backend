@@ -1,5 +1,6 @@
 package com.microservice.users.controller;
 
+import com.microservice.users.dto.UserProfileNotificationResponse;
 import com.microservice.users.dto.UserProfileRequest;
 import com.microservice.users.dto.UserProfileResponse;
 import com.microservice.users.model.UserProfile;
@@ -39,6 +40,17 @@ public class UsersController {
                 profile.getFullName(),
                 profile.getAddresses(),
                 profile.getPaymentMethods()
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{userId}/notification")
+    public ResponseEntity<UserProfileNotificationResponse> getUserProfileNotification(@PathVariable Long userId){
+        UserProfile profile = service.getProfileByUserId(userId);
+        UserProfileNotificationResponse response = new UserProfileNotificationResponse(
+                profile.getUserId(),
+                profile.getEmail(),
+                profile.getFullName()
         );
         return ResponseEntity.ok(response);
     }

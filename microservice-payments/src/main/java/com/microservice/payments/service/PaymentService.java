@@ -28,7 +28,7 @@ public class PaymentService {
         // 2. Registrar en BD con status=APPROVED, pues en front ya se capturó
         PaymentTransaction tx = new PaymentTransaction();
         tx.setAmount(request.getAmount());
-        tx.setMethod(request.getMethod()); // "paypal"
+        tx.setMethod(request.getType()); // "paypal"
         tx.setPayPalOrderId(request.getToken());
         tx.setStatus(PaymentStatus.APPROVED);
         tx.setTransactionId("tx-" + UUID.randomUUID());

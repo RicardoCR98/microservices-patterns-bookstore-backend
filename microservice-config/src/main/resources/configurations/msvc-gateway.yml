@@ -24,6 +24,7 @@ spring:
           uri: lb://msvc-orders
           predicates:
             - Path=/api/orders/**
+
 eureka:
   client:
     register-with-eureka: true

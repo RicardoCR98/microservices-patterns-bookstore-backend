@@ -15,6 +15,12 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  # Configuración de RabbitMQ
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
 
 eureka:
   client:
@@ -46,3 +52,14 @@ management:
       exposure:
         include: "*"
 
+# Logging
+logging:
+  level:
+    root: INFO
+    org.springframework.amqp: INFO
+    com.microservice.orders: DEBUG
+app:
+  rabbitmq:
+    exchange: orders-exchange
+    queue: orders-queue
+    routingKey: orders.created
