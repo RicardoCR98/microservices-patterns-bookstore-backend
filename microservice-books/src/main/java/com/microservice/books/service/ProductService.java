@@ -103,4 +103,8 @@ public class ProductService {
                         .toList())
                 .orElse(List.of());
     }
+    // Nuevo metodo: obtener libros por userId
+    public List<Product> getProductsByUserId(Long userId) {
+        return productRepository.findByUserId(userId);
+    }
 }

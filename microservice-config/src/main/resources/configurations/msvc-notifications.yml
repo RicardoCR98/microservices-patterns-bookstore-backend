@@ -14,8 +14,8 @@ spring:
   mail:
     host: smtp.gmail.com          # Por ejemplo, si usas Gmail
     port: 587                     # TLS
-    username: garycardo98@gmail.com
-    password: xwcw rhtp ajiu zzle
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     protocol: smtp
     properties:
       mail:

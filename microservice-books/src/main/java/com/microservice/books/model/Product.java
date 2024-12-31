@@ -18,7 +18,7 @@ public class Product {
 
     @Id
     private String id; // Generar automáticamente un UUID único
-
+    private Long userId;
     private String title; //Lo llena el usuario input text
     private String author; //Lo llena el usuario input text
     private String isbn; //Lo llena el usuario input text

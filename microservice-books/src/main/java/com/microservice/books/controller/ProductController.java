@@ -74,4 +74,11 @@ public class ProductController {
         List<Product> relatedProducts = productService.getRelatedProducts(id);
         return ResponseEntity.ok(relatedProducts);
     }
+
+    // Obtener todos los libros de un usuario
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Product>> getProductsByUserId(@PathVariable Long userId) {
+        List<Product> userProducts = productService.getProductsByUserId(userId);
+        return ResponseEntity.ok(userProducts);
+    }
 }
