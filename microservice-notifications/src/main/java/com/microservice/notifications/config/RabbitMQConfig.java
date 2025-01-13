@@ -42,13 +42,13 @@ public class RabbitMQConfig {
                 .with(routingKey);
     }
 
-    // (Opcional) Configurar RabbitTemplate
+    // Configurar RabbitTemplate
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         return new RabbitTemplate(connectionFactory);
     }
 
-    // (Opcional) ContainerFactory, si necesitas concurrencia
+    // ContainerFactory, si necesitas concurrencia
     @Bean
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
             ConnectionFactory connectionFactory
