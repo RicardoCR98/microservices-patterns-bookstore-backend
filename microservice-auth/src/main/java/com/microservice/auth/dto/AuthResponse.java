@@ -11,4 +11,5 @@ public class AuthResponse {
     private String token;       // Token JWT
     private String role;        // Rol del usuario
     private Long expirationDate; // Fecha de expiración del token en timestamp
+    private boolean isActive;   // Indica si el usuario está activo
 }

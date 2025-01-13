@@ -32,7 +32,7 @@ public class AuthOutbox {
     private Timestamp occurredAt = new Timestamp(System.currentTimeMillis());
 
     @Column(nullable = false)
-    private Boolean processed = false;
+    private Boolean processed = true;
 
-    private Timestamp processedAt;
+    private Timestamp processedAt = new Timestamp(System.currentTimeMillis());;
 }
