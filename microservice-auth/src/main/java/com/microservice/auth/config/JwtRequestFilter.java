@@ -27,7 +27,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private CustomUserDetailsService userDetailsService;
     private static final List<String> WHITE_LIST = List.of(
             "/auth/register",  // Rutas públicas en el microservicio
-            "/auth/login"
+            "/auth/login",
+            "/auth/a/login"
     );
 
     @Override

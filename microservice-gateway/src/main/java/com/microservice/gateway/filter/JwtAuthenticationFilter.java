@@ -25,9 +25,8 @@ public class JwtAuthenticationFilter implements GlobalFilter {
     private static final String[] WHITE_LIST = {
             "/auth/register",  // Permitir registro sin autenticación
             "/auth/login",     // Permitir login sin autenticación
-            "/auth/**",        // Generalmente las rutas públicas del microservicio de autenticación
+            "/auth/a/login",   // Permitir login de administrador sin autenticación
             "/mantenimiento/**", // Rutas de mantenimiento
-            // Añade aquí otras rutas que no necesiten autenticación
     };
 
 

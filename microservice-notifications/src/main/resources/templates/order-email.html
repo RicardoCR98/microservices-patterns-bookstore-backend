@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Detalles de tu Compra</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8f9fa; font-family: Arial, sans-serif; color: #333333;">
+<!-- Contenedor principal -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <tr>
+        <td style="padding: 40px 20px; text-align: center;">
+            <!-- Header -->
+            <h1 style="color: #4A90E2; font-size: 28px; margin: 0;">¡Gracias por tu compra!</h1>
+        </td>
+    </tr>
+
+    <tr>
+        <td style="padding: 0 20px;">
+            <!-- Información de la orden -->
+            <table border="0" cellpadding="10" cellspacing="0" width="100%" style="background-color: #f8f9fa; border-radius: 6px; margin-bottom: 20px;">
+                <tr>
+                    <td>
+                        <p style="margin: 5px 0;"><strong style="color: #2C3E50; display: inline-block; width: 120px;">Número de orden:</strong> <span th:text="${order.id}" style="color: #E74C3C;"></span></p>
+                        <p style="margin: 5px 0;"><strong style="color: #2C3E50; display: inline-block; width: 120px;">Estado:</strong> <span th:text="${order.status}"></span></p>
+                        <p style="margin: 5px 0;"><strong style="color: #2C3E50; display: inline-block; width: 120px;">Total:</strong> $<span th:text="${order.total}" style="color: #E74C3C;"></span></p>
+                        <p style="margin: 5px 0;"><strong style="color: #2C3E50; display: inline-block; width: 120px;">Dirección:</strong> <span th:text="${order.address}"></span></p>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Productos -->
+            <h3 style="color: #2C3E50; font-size: 22px; margin: 20px 0;">Productos:</h3>
+            <table border="0" cellpadding="10" cellspacing="0" width="100%" style="border-collapse: collapse; margin-bottom: 20px;">
+                <thead>
+                <tr style="background-color: #4A90E2;">
+                    <th style="color: white; text-align: left; padding: 12px; font-weight: 600;">Producto</th>
+                    <th style="color: white; text-align: left; padding: 12px; font-weight: 600;">Cantidad</th>
+                    <th style="color: white; text-align: left; padding: 12px; font-weight: 600;">Precio (Unit)</th>
+                    <th style="color: white; text-align: left; padding: 12px; font-weight: 600;">Subtotal</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${order.items}" style="border-bottom: 1px solid #E1E8ED;">
+                    <td style="padding: 12px;" th:text="${item.name}">Nombre producto</td>
+                    <td style="padding: 12px;" th:text="${item.quantity}">1</td>
+                    <td style="padding: 12px;">$<span th:text="${#numbers.formatDecimal(item.price, 2, 2)}">0.00</span></td>
+                    <td style="padding: 12px;">$<span th:text="${#numbers.formatDecimal(item.price * item.quantity, 2, 2)}">Subtotal</span></td>
+                </tr>
+                <!-- Fila de total -->
+                <tr style="background-color: #2C3E50;">
+                    <td colspan="3" style="padding: 12px; color: white;"><strong>Total</strong></td>
+                    <td style="padding: 12px; color: white;">$<span th:text="${#numbers.formatDecimal(order.total, 2, 2)}">Total</span></td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+
+    <tr>
+        <td style="padding: 20px; text-align: center; border-top: 2px solid #E1E8ED;">
+            <p style="color: #2C3E50; font-size: 18px; font-weight: 500; margin: 0;">¡Disfruta tu compra!</p>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

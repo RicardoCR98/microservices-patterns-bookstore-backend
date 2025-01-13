@@ -18,11 +18,11 @@ public class MicroserviceNotificationsApplication {
 	public static void main(String[] args) {
 		Dotenv dotenv = Dotenv.load();
 		// Configuración de propiedades del sistema
-		System.out.println("El env es: " + dotenv.get("EMAIL_USERNAME") + " y la contraseña es:" + dotenv.get("EMAIL_PASSWORD"));
+		System.out.println("El env es: " + dotenv.get("MAIL_USERNAME") + " y la contraseña es:" + dotenv.get("MAIL_PASSWORD"));
 
 		// Email
-		System.setProperty("EMAIL_USERNAME", Objects.requireNonNull(dotenv.get("EMAIL_USERNAME")));
-		System.setProperty("EMAIL_PASSWORD", Objects.requireNonNull(dotenv.get("EMAIL_PASSWORD")));
+		System.setProperty("MAIL_USERNAME", Objects.requireNonNull(dotenv.get("MAIL_USERNAME")));
+		System.setProperty("MAIL_PASSWORD", Objects.requireNonNull(dotenv.get("MAIL_PASSWORD")));
 		SpringApplication.run(MicroserviceNotificationsApplication.class, args);
 	}
 

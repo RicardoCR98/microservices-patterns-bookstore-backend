@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -13,6 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final JwtRequestFilter jwtRequestFilter;
@@ -27,8 +29,15 @@ public class SecurityConfig {
 
                 // Configuración de autorización de rutas
                 .authorizeHttpRequests(auth -> auth
-                        // Ignorar completamente rutas públicas
-                        .requestMatchers("/auth/register", "/auth/login").permitAll()
+                        // Rutas públicas
+                        // "/auth/register" y "/auth/login" serán públicas
+                        .requestMatchers("/auth/register", "/auth/login","/auth/a/login").permitAll()
+                        // Rutas a las que sólo se puede acceder con token (autenticación)
+                        // y con un rol específico
+                        // En este caso, forzamos que "/auth/a/register" requiera rol ADMIN,
+                        .requestMatchers("/auth/a/register").hasRole("ADMIN")
+
+                        // Cualquier otra ruta requiere autenticación
                         .anyRequest().authenticated()
                 )
 
