@@ -6,12 +6,16 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true
+          enabled: false
       routes:
         - id: auth-service
           uri: lb://msvc-auth
           predicates:
             - Path=/auth/**
+        - id: auth-service-admin-routes
+          uri: lb://msvc-auth
+          predicates:
+            - Path=/admin/**
         - id: book-service
           uri: lb://msvc-books
           predicates:
