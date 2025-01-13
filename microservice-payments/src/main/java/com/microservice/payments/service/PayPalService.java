@@ -1,8 +1,12 @@
+// PayPalService.java
 package com.microservice.payments.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -17,13 +21,14 @@ import java.util.Base64;
 @RequiredArgsConstructor
 public class PayPalService {
 
+    private static final Logger logger = LoggerFactory.getLogger(PayPalService.class);
+
     @Value("${paypal.client-id}")
     private String clientId;
     @Value("${paypal.client-secret}")
     private String clientSecret;
     @Value("${paypal.mode}")
-    private String mode; // "sandbox" o "live"
-
+    private String mode;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -33,13 +38,9 @@ public class PayPalService {
                 : "https://api-m.paypal.com";
     }
 
-    /**
-     * Obtiene accessToken llamando a /v1/oauth2/token
-     */
+    @CircuitBreaker(name = "payPalServiceCircuitBreaker", fallbackMethod = "getAccessTokenFallback")
     public String getAccessToken() throws IOException, InterruptedException {
-        System.out.println("El CLIENT_ID es: " + clientId);
-        System.out.println("El CLIENT_SECRET es: " + clientSecret);
-
+        logger.info("Fetching PayPal access token");
         String auth = clientId + ":" + clientSecret;
         String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
 
@@ -55,24 +56,33 @@ public class PayPalService {
 
         if (response.statusCode() == 200) {
             JsonNode json = mapper.readTree(response.body());
+            logger.debug("Access token fetched successfully");
             return json.get("access_token").asText();
         } else {
-            throw new RuntimeException("Error al obtener Access Token de PayPal: " + response.body());
+            logger.error("Error fetching PayPal access token: {}", response.body());
+            throw new RuntimeException("Error fetching Access Token: " + response.body());
         }
     }
 
-    /**
-     * Captura la orden en PayPal dada el payPalOrderId
-     */
-    public CaptureResult captureOrder(String payPalOrderId) throws IOException, InterruptedException {
-        String accessToken = getAccessToken();
+    public String getAccessTokenFallback(Throwable throwable) {
+        logger.error("Fallback for getAccessToken invoked: {}", throwable.getMessage());
+        return null;
+    }
 
-        // Llamada a /v2/checkout/orders/{order_id}/capture
+    @CircuitBreaker(name = "payPalServiceCircuitBreaker", fallbackMethod = "captureOrderFallback")
+    public CaptureResult captureOrder(String payPalOrderId) throws IOException, InterruptedException {
+        logger.info("Capturing PayPal order with ID: {}", payPalOrderId);
+        String accessToken = getAccessToken();
+        if (accessToken == null) {
+            logger.error("AccessToken is null, cannot capture PayPal order");
+            throw new RuntimeException("AccessToken is null");
+        }
+
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(getBaseUrl() + "/v2/checkout/orders/" + payPalOrderId + "/capture"))
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + accessToken)
-                .POST(HttpRequest.BodyPublishers.ofString("{}")) // Body vacío
+                .POST(HttpRequest.BodyPublishers.ofString("{}"))
                 .build();
 
         HttpResponse<String> response = HttpClient.newHttpClient()
@@ -80,9 +90,8 @@ public class PayPalService {
 
         if (response.statusCode() == 201) {
             JsonNode json = mapper.readTree(response.body());
+            logger.info("Order captured successfully with ID: {}", payPalOrderId);
 
-            // "status": "COMPLETED",
-            // "purchase_units"[0]."payments"."captures"[0]."id"
             String status = json.get("status").asText();
             String captureId = null;
 
@@ -96,12 +105,15 @@ public class PayPalService {
 
             return new CaptureResult(status, captureId);
         } else {
-            throw new RuntimeException("Error al capturar la orden PayPal: " + response.body());
+            logger.error("Error capturing PayPal order: {}", response.body());
+            throw new RuntimeException("Error capturing PayPal order: " + response.body());
         }
     }
 
-    /**
-     * POJO simple para devolver la info del capture
-     */
+    public CaptureResult captureOrderFallback(String payPalOrderId, Throwable throwable) {
+        logger.error("Fallback for captureOrder invoked for ID: {}: {}", payPalOrderId, throwable.getMessage());
+        return new CaptureResult("REJECTED", "FALLBACK_CAPTURE_ID");
+    }
+
     public record CaptureResult(String status, String captureId) {}
 }

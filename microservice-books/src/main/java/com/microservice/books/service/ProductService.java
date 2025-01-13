@@ -1,27 +1,36 @@
+// ProductService.java
 package com.microservice.books.service;
 
 import com.microservice.books.dto.ProductsFilterDTO;
 import com.microservice.books.model.Product;
 import com.microservice.books.repositories.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class ProductService {
+    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
+
     private final ProductRepository productRepository;
 
     // Listar todos los productos
     public List<Product> listAllProducts() {
+        logger.info("Fetching all products");
         return productRepository.findAll();
     }
 
     // Filtrar productos según los parámetros proporcionados
     public List<Product> filterProducts(ProductsFilterDTO filter) {
+        logger.info("Filtering products with filter: {}", filter);
+
         // Extraer valores del DTO
         Optional<String> search = Optional.ofNullable(filter.getSearch());
         Optional<String> sort = Optional.ofNullable(filter.getSort());
@@ -61,11 +70,14 @@ public class ProductService {
 
     // Obtener detalles de un producto por ID
     public Optional<Product> getProductDetails(String id) {
+        logger.debug("Fetching product details for ID: {}", id);
         return productRepository.findById(id);
     }
 
     // Agregar un nuevo producto
     public Product addProduct(Product product) {
+        logger.info("Adding a new product: {}", product);
+
         if (product.getId() == null || product.getId().isEmpty()) {
             product.setId(UUID.randomUUID().toString());
         }
@@ -75,36 +87,48 @@ public class ProductService {
         if(product.getStockQuantity() != null){
             product.setIsAvailable(product.getStockQuantity());
         }
-        return productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+        logger.info("Product added successfully with ID: {}", savedProduct.getId());
+
+        return savedProduct;
     }
 
     // Actualizar un producto existente
     public Optional<Product> updateProduct(String id, Product updatedProduct) {
+        logger.info("Updating product with ID: {}", id);
         return productRepository.findById(id).map(existingProduct -> {
             updatedProduct.setId(existingProduct.getId());
-            return productRepository.save(updatedProduct);
+            Product savedProduct = productRepository.save(updatedProduct);
+            logger.info("Product updated successfully with ID: {}", savedProduct.getId());
+            return savedProduct;
         });
     }
 
     // Eliminar un producto por ID
     public boolean deleteProduct(String id) {
+        logger.info("Deleting product with ID: {}", id);
         if (productRepository.existsById(id)) {
             productRepository.deleteById(id);
+            logger.info("Product deleted successfully with ID: {}", id);
             return true;
         }
+        logger.warn("Product not found with ID: {}", id);
         return false;
     }
 
     // Obtener productos relacionados (por ejemplo, misma categoría o género)
     public List<Product> getRelatedProducts(String id) {
+        logger.debug("Fetching related products for ID: {}", id);
         return productRepository.findById(id)
                 .map(product -> productRepository.findByCategory(product.getCategory()).stream()
                         .filter(relatedProduct -> !relatedProduct.getId().equals(id))
                         .toList())
                 .orElse(List.of());
     }
+
     // Nuevo metodo: obtener libros por userId
     public List<Product> getProductsByUserId(Long userId) {
+        logger.debug("Fetching products for user ID: {}", userId);
         return productRepository.findByUserId(userId);
     }
 }

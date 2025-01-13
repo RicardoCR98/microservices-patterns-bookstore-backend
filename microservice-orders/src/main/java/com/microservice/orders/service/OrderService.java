@@ -1,3 +1,4 @@
+// OrderService.java
 package com.microservice.orders.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,8 +11,11 @@ import com.microservice.orders.model.OrderOutbox;
 import com.microservice.orders.model.OrderStatus;
 import com.microservice.orders.repositories.OrderOutboxRepository;
 import com.microservice.orders.repositories.OrderRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,30 +27,44 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderService {
 
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
+
     private final OrderRepository orderRepository;
     private final PaymentClient paymentClient;
     private final OrderOutboxRepository outboxRepository;
 
+    @CircuitBreaker(name = "msvc-payments", fallbackMethod = "paymentFallback")
+    public PaymentResponse callPaymentService(PaymentRequest request) {
+        logger.info("Calling payment service with request: {}", request);
+        return paymentClient.charge(request);
+    }
+
+    public PaymentResponse paymentFallback(PaymentRequest request, Throwable t) {
+        logger.error("[CircuitBreaker-Fallback] Payment service unavailable: {}", t.getMessage());
+        return new PaymentResponse("REJECTED", "fallback-cb", "FALLBACK_CB");
+    }
+
     @Transactional
     public Order createOrder(CheckoutRequest request) {
-        // 1. Calcular total
+        logger.info("Creating order for user ID: {}", request.getUserId());
+
         double total = 0.0;
         for (CheckoutProductDto p : request.getProducts()) {
             double price = p.getOfferPrice() != null ? p.getOfferPrice() : p.getSalePrice();
             total += price * p.getQuantity();
         }
+        logger.debug("Calculated total price: {}", total);
 
-        // 2. Llamar al microservicio de pagos
-        PaymentResponse payment = paymentClient.charge(
+        PaymentResponse payment = callPaymentService(
                 new PaymentRequest(
                         total,
                         request.getPayment().getType(),
                         request.getPayment().getToken(),
-                        null  // orderId opcional
+                        null
                 )
         );
+        logger.info("Payment response: {}", payment);
 
-        // 3. Crear la entidad Order
         Order order = new Order();
         order.setUserId(request.getUserId());
         order.setTotal(total);
@@ -56,8 +74,8 @@ public class OrderService {
         } else {
             order.setStatus(OrderStatus.REJECTED);
         }
+        logger.debug("Order status set to: {}", order.getStatus());
 
-        // 4. Crear items
         List<OrderItem> items = new ArrayList<>();
         for (CheckoutProductDto p : request.getProducts()) {
             OrderItem oi = new OrderItem();
@@ -71,35 +89,39 @@ public class OrderService {
             items.add(oi);
         }
         order.setItems(items);
+        logger.info("Order items set for order ID: {}", order.getId());
 
-        // 5. Guardar la Order en la BD
         Order savedOrder = orderRepository.save(order);
+        logger.info("Order saved successfully with ID: {}", savedOrder.getId());
 
-        // 6. Mapear la Order a un DTO (sin referencias cíclicas)
         OrderEventDto eventDto = mapOrderToEventDto(savedOrder);
-
-        // 7. Serializar el DTO
         String payload = convertirDtoAJson(eventDto);
+        logger.debug("OrderEventDto payload: {}", payload);
 
-        // 8. Registrar en la tabla Outbox
         OrderOutbox outbox = new OrderOutbox();
         outbox.setEventType("ORDER_CREATED");
         outbox.setAggregateType("Order");
         outbox.setAggregateId(savedOrder.getId());
-        outbox.setPayload(payload);  // <-- usando el DTO
+        outbox.setPayload(payload);
         outbox.setCreatedAt(LocalDateTime.now());
         outbox.setStatus("PENDING");
         outboxRepository.save(outbox);
+        logger.info("Outbox event created for order ID: {}", savedOrder.getId());
 
         return savedOrder;
     }
 
     public Order getOrder(Long orderId) {
+        logger.info("Fetching order with ID: {}", orderId);
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+                .orElseThrow(() -> {
+                    logger.error("Order not found with ID: {}", orderId);
+                    return new RuntimeException("Order not found with ID: " + orderId);
+                });
     }
 
     private String formatAddress(CheckoutAddressDto addr) {
+        logger.debug("Formatting address for: {}", addr);
         String line2 = (addr.getLine2() != null) ? addr.getLine2() : "";
         return addr.getLabel() + ", "
                 + addr.getLine1() + " "
@@ -110,10 +132,8 @@ public class OrderService {
                 + addr.getZipCode();
     }
 
-    /**
-     * Convierte la entidad Order en OrderEventDto.
-     */
     private OrderEventDto mapOrderToEventDto(Order order) {
+        logger.debug("Mapping Order to OrderEventDto for order ID: {}", order.getId());
         OrderEventDto dto = new OrderEventDto();
         dto.setId(order.getId());
         dto.setUserId(order.getUserId());
@@ -121,7 +141,6 @@ public class OrderService {
         dto.setStatus(order.getStatus().name());
         dto.setTotal(order.getTotal());
 
-        // Convertir los items al DTO
         if (order.getItems() != null) {
             List<OrderItemEventDto> itemDtos = order.getItems().stream().map(item -> {
                 OrderItemEventDto iDto = new OrderItemEventDto();
@@ -139,16 +158,13 @@ public class OrderService {
         return dto;
     }
 
-    /**
-     * Serializa el DTO a JSON sin caer en recursión.
-     */
     private String convertirDtoAJson(OrderEventDto eventDto) {
         try {
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(eventDto);
         } catch (JsonProcessingException e) {
+            logger.error("Error serializing OrderEventDto to JSON: {}", e.getMessage());
             throw new RuntimeException("Error serializing OrderEventDto to JSON", e);
         }
     }
-
 }

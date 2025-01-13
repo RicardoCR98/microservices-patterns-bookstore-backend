@@ -31,3 +31,16 @@ management:
 
 server:
     port: 8091 #No cambiar de puerto porque no se va a usar con el gateway
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      payPalServiceCircuitBreaker:
+        registerHealthIndicator: true
+        ringBufferSizeInClosedState: 5
+        ringBufferSizeInHalfOpenState: 3
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        eventConsumerBufferSize: 10
+        # También puedes usar 'slowCallRateThreshold', 'slowCallDurationThreshold', etc.

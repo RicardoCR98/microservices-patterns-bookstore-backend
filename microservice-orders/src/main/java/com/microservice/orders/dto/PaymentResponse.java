@@ -6,9 +6,9 @@ import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 public class PaymentResponse {
     private String status; // "APPROVED" or "REJECTED"
     private String type; // "card", "paypal"
     private String transactionId;
+
 }

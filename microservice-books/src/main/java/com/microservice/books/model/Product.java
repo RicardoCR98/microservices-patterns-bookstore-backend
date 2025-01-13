@@ -23,7 +23,7 @@ public class Product {
     private String author; //Lo llena el usuario input text
     private String isbn; //Lo llena el usuario input text
     private String publisher; //Lo llena el usuario input text
-    private LocalDate publicationDate; //Lo llena el usuario input date
+    private String publicationDate; //Lo llena el usuario input date
     private Category category; //Lo llena el usuario select
     private Genre genre; //Lo llena el usuario select
     private Integer nPages; //Lo llena el usuario input number
@@ -32,7 +32,7 @@ public class Product {
     private BigDecimal salePrice; //Lo llena el usuario input number
     private BigDecimal offerPrice; // Calculado automáticamente
     private BigDecimal offer; //Lo llena el usuario input number
-    private String cover; //Lo llena el usuario input file
+    private byte[] cover; //Lo llena el usuario input file
     private Condition condition; //Lo llena el usuario select
     private Double rating; // Lo llena el usuario input number
     private Boolean isAvailable; // Calculado automáticamente

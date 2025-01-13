@@ -16,7 +16,5 @@ public class PaymentMethod {
     private String last4;            // Últimos 4 dígitos de la tarjeta
     private String expirationMonth;
     private String expirationYear;
-    // Nota: La información sensible (número completo de tarjeta) NO se almacena aquí,
-    // sino un token proporcionado por un gateway seguro, si fuera el caso.
     private String token; // Token provisto por un servicio de pago externo
 }
