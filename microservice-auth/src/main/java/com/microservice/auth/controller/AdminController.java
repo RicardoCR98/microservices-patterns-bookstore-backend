@@ -92,6 +92,7 @@ public class AdminController {
                     updateRequest.getIsActive(),
                     updateRequest.getFullName(),
                     updateRequest.getEmail(),
+                    updateRequest.getRole().name(),
                     currentUser // Pasamos el usuario que ejecuta la acción
             );
 

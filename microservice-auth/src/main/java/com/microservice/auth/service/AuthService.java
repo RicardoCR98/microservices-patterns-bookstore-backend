@@ -160,6 +160,7 @@ public class AuthService {
             Boolean isActive,
             String fullName,
             String email,
+            String role,
             AuthUser currentUser
     ) {
         // Verificamos que el usuario que hace la petición sea ADMIN
@@ -195,6 +196,10 @@ public class AuthService {
             // Podrías validar que no exista otro usuario con el mismo email
             targetUser.setEmail(email);
             logger.debug("Cambiado el email de {} a {}", userId, email);
+        }
+        if (role != null && !role.isBlank()) {
+            targetUser.setRole(UserRole.valueOf(role));
+            logger.debug("Cambiado el role de {} a {}", userId, role);
         }
 
         // Guarda los cambios
