@@ -3,7 +3,8 @@ package com.microservice.gateway.filter;
 import com.microservice.gateway.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -13,14 +14,14 @@ import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
-
+import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Order(0) // Se ejecuta este filtro antes que otros
 public class JwtAuthenticationFilter implements GlobalFilter {
 
     private final JwtUtil jwtUtil;
-
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     // Opcional: Rutas que no requieren autenticación
     private static final String[] WHITE_LIST = {
             "/auth/register",  // Permitir registro sin autenticación
@@ -52,12 +53,18 @@ public class JwtAuthenticationFilter implements GlobalFilter {
         if (!jwtUtil.validateToken(token)) {
             return this.onError(exchange, "Invalid JWT token", HttpStatus.UNAUTHORIZED);
         }
+        Claims claims = jwtUtil.getAllClaimsFromToken(token);
+        String role = claims.get("role", String.class);
+        // Validar rol ADMIN para rutas Swagger
+        if (path.startsWith("/auth-docs") || path.startsWith("/users-docs") ||
+                path.startsWith("/books-docs") || path.startsWith("/orders-docs")) {
+            if (!"ADMIN".equals(role)) {
+                return this.onError(exchange, "Forbidden: Admin access required", HttpStatus.FORBIDDEN);
+            }
+        }
+        logger.info("Role from token: {}", role);
 
-//        Claims claims = jwtUtil.getAllClaimsFromToken(token);
-//        System.out.println("Claims: " + claims);
-        // Aquí podrías verificar roles o lo que requieras
-        // Ejemplo: Si quieres asegurarte que el usuario tenga cierto rol
-        // List<String> roles = claims.get("roles", List.class);
+
 
         return chain.filter(exchange);
     }

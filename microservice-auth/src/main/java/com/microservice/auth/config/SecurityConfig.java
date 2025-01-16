@@ -36,7 +36,11 @@ public class SecurityConfig {
                         // y con un rol específico
                         // En este caso, forzamos que "/auth/a/register" requiera rol ADMIN,
                         .requestMatchers("/auth/a/register").hasRole("ADMIN")
-
+                        // Rutas de Swagger solo accesibles para ADMIN
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html"
+                        ).hasRole("ADMIN")
                         // Cualquier otra ruta requiere autenticación
                         .anyRequest().authenticated()
                 )

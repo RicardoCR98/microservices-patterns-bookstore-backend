@@ -23,3 +23,8 @@ management:
     web:
       exposure:
         include: "*"
+springdoc:
+  api-docs:
+    path: /books-docs/v3/api-docs
+  swagger-ui:
+    path: /books-docs/swagger-ui.html

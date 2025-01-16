@@ -74,3 +74,9 @@ management:
     web:
       exposure:
         include: "*"
+
+springdoc:
+  api-docs:
+    path: /auth-docs/v3/api-docs # Ruta personalizada para los documentos de la API
+  swagger-ui:
+    path: /auth-docs/swagger-ui.html # Ruta personalizada para la interfaz de Swagger UI

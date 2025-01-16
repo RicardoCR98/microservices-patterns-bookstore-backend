@@ -8,33 +8,63 @@ spring:
         locator:
           enabled: false
       routes:
+        # Rutas para el microservicio de autenticación
         - id: auth-service
           uri: lb://msvc-auth
           predicates:
             - Path=/auth/**
+
+        # Rutas para la administración del microservicio de autenticación
         - id: auth-service-admin-routes
           uri: lb://msvc-auth
           predicates:
             - Path=/admin/**
+
+        # Rutas para el microservicio de productos (books)
         - id: book-service
           uri: lb://msvc-books
           predicates:
             - Path=/api/products/**
+
+        # Rutas para el microservicio de usuarios
         - id: user-service
           uri: lb://msvc-users
           predicates:
             - Path=/users/**
+
+        # Rutas para el microservicio de órdenes
         - id: order-service
           uri: lb://msvc-orders
           predicates:
             - Path=/api/orders/**
 
-eureka:
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
+        # Rutas personalizadas para la documentación de Swagger
+        - id: auth-docs
+          uri: lb://msvc-auth
+          predicates:
+            - Path=/auth-docs/**
+
+        - id: users-docs
+          uri: lb://msvc-users
+          predicates:
+            - Path=/users-docs/**
+
+        - id: books-docs
+          uri: lb://msvc-books
+          predicates:
+            - Path=/books-docs/**
+
+        - id: orders-docs
+          uri: lb://msvc-orders
+          predicates:
+            - Path=/orders-docs/**
+
+  eureka:
+    client:
+      register-with-eureka: true
+      fetch-registry: true
+      service-url:
+        defaultZone: http://localhost:8761/eureka/
 
 server:
   port: 8080
@@ -48,3 +78,9 @@ management:
 jwt:
   secret: ${JWT_SECRET}
   expiration: 3600000
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

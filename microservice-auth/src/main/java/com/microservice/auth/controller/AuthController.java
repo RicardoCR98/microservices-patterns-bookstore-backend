@@ -88,7 +88,7 @@ public class AuthController {
 
             UserDetails userDetails = (UserDetails) auth.getPrincipal();
 
-            String token = jwtUtil.generateToken(userDetails);
+            String token = jwtUtil.generateToken(userDetails, authUser.getRole().name());
             Long expirationDate = jwtUtil.getExpirationDateFromToken(token).getTime();
 
             AuthResponse data = new AuthResponse(
@@ -183,7 +183,7 @@ public class AuthController {
 
             UserDetails userDetails = (UserDetails) auth.getPrincipal();
 
-            String token = jwtUtil.generateToken(userDetails);
+            String token = jwtUtil.generateToken(userDetails, authUser.getRole().name());
             Long expirationDate = jwtUtil.getExpirationDateFromToken(token).getTime();
 
             AuthResponse data = new AuthResponse(
@@ -203,7 +203,7 @@ public class AuthController {
         } catch (Exception e) {
             logger.error("Error during login: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                    new ApiResponse<>(false, "Credenciales inválidas", null)
+                    new ApiResponse<>(false, "El usuario debe de ser administrador", null)
             );
         }
     }

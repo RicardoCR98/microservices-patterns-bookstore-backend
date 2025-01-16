@@ -83,3 +83,10 @@ resilience4j:
         ringBufferSizeInHalfOpenState: 3
         waitDurationInOpenState: 10s
         failureRateThreshold: 50
+
+
+springdoc:
+  api-docs:
+    path: /orders-docs/v3/api-docs
+  swagger-ui:
+    path: /orders-docs/swagger-ui.html

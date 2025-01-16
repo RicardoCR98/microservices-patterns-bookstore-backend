@@ -24,3 +24,8 @@ management:
       exposure:
         include: "*"
 
+springdoc:
+  api-docs:
+    path: /users-docs/v3/api-docs
+  swagger-ui:
+    path: /users-docs/swagger-ui.html
