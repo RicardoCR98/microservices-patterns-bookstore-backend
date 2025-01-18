@@ -15,11 +15,6 @@ public class MicroserviceAuthApplication {
 
 	public static void main(String[] args) {
 		Dotenv dotenv = Dotenv.load();
-
-		// Configuración de propiedades del sistema
-		System.out.println("El env es: " + dotenv.get("DB_USERNAME") + " y la contraseña es:" + dotenv.get("DB_PASSWORD"));
-		System.out.println("El JWT es: " + dotenv.get("JWT_SECRET"));
-
 		// Base de datos
 		System.setProperty("DB_USERNAME", Objects.requireNonNull(dotenv.get("DB_USERNAME")));
 		System.setProperty("DB_PASSWORD", Objects.requireNonNull(dotenv.get("DB_PASSWORD")));

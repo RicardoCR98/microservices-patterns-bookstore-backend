@@ -13,8 +13,6 @@ public class MicroserviceGatewayApplication {
 
 	public static void main(String[] args) {
 		Dotenv dotenv = Dotenv.load();
-		System.out.println("El JWT es: " + dotenv.get("JWT_SECRET"));
-
 		// JWT
 		System.setProperty("JWT_SECRET", Objects.requireNonNull(dotenv.get("JWT_SECRET")));
 

@@ -15,10 +15,6 @@ public class MicroservicePaymentsApplication {
 
 	public static void main(String[] args) {
 		Dotenv dotenv = Dotenv.load();
-
-		// Configuración de propiedades del sistema
-		System.out.println("El env es: " + dotenv.get("DB_USERNAME") + " y la contraseña es:" + dotenv.get("DB_PASSWORD"));
-
 		// Establecer propiedades del sistema con nombres correctos
 		System.setProperty("DB_USERNAME", Objects.requireNonNull(dotenv.get("DB_USERNAME")));
 		System.setProperty("DB_PASSWORD", Objects.requireNonNull(dotenv.get("DB_PASSWORD")));
