@@ -1,14 +1,10 @@
-// OrderService.java
 package com.microservice.orders.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microservice.orders.client.PaymentClient;
 import com.microservice.orders.dto.*;
-import com.microservice.orders.model.Order;
-import com.microservice.orders.model.OrderItem;
-import com.microservice.orders.model.OrderOutbox;
-import com.microservice.orders.model.OrderStatus;
+import com.microservice.orders.model.*;
 import com.microservice.orders.repositories.OrderOutboxRepository;
 import com.microservice.orders.repositories.OrderRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -32,15 +28,42 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final PaymentClient paymentClient;
     private final OrderOutboxRepository outboxRepository;
+    private final LogEntryService logEntryService;
 
     @CircuitBreaker(name = "msvc-payments", fallbackMethod = "paymentFallback")
     public PaymentResponse callPaymentService(PaymentRequest request) {
         logger.info("Calling payment service with request: {}", request);
+
+        if (request.getOrderId() != null) {
+            logEntryService.createLog(
+                    getOrder(request.getOrderId()),
+                    "PAYMENT_SERVICE_CALL",
+                    "Initiating payment service call",
+                    "Amount: " + request.getAmount() + ", Type: " + request.getType(),
+                    null,
+                    null,
+                    request.getAmount()
+            );
+        }
+
         return paymentClient.charge(request);
     }
 
     public PaymentResponse paymentFallback(PaymentRequest request, Throwable t) {
         logger.error("[CircuitBreaker-Fallback] Payment service unavailable: {}", t.getMessage());
+
+        if (request.getOrderId() != null) {
+            logEntryService.createLog(
+                    getOrder(request.getOrderId()),
+                    "PAYMENT_SERVICE_FALLBACK",
+                    "Payment service fallback activated",
+                    "Error: " + t.getMessage(),
+                    null,
+                    "REJECTED",
+                    request.getAmount()
+            );
+        }
+
         return new PaymentResponse("REJECTED", "fallback-cb", "FALLBACK_CB");
     }
 
@@ -48,65 +71,62 @@ public class OrderService {
     public Order createOrder(CheckoutRequest request) {
         logger.info("Creating order for user ID: {}", request.getUserId());
 
-        double total = 0.0;
-        for (CheckoutProductDto p : request.getProducts()) {
-            double price = p.getOfferPrice() != null ? p.getOfferPrice() : p.getSalePrice();
-            total += price * p.getQuantity();
-        }
+        // Calculate total
+        double total = calculateTotal(request.getProducts());
         logger.debug("Calculated total price: {}", total);
 
+        // Create initial order
+        Order order = createInitialOrder(request, total);
+        Order savedOrder = orderRepository.save(order);
+
+        logEntryService.createLog(
+                savedOrder,
+                "ORDER_CREATED",
+                "Order created successfully",
+                "UserId: " + request.getUserId() + ", Total: " + total,
+                null,
+                OrderStatus.PENDING.name(),
+                total
+        );
+
+        // Process payment
         PaymentResponse payment = callPaymentService(
                 new PaymentRequest(
                         total,
                         request.getPayment().getType(),
                         request.getPayment().getToken(),
-                        null
+                        savedOrder.getId()
                 )
         );
+
         logger.info("Payment response: {}", payment);
 
-        Order order = new Order();
-        order.setUserId(request.getUserId());
-        order.setTotal(total);
-        order.setAddress(formatAddress(request.getBilling()));
-        if ("APPROVED".equalsIgnoreCase(payment.getStatus())) {
-            order.setStatus(OrderStatus.PAID);
-        } else {
-            order.setStatus(OrderStatus.REJECTED);
-        }
-        logger.debug("Order status set to: {}", order.getStatus());
+        // Update order status based on payment response
+        String previousStatus = savedOrder.getStatus().name();
+        updateOrderStatus(savedOrder, payment);
 
-        List<OrderItem> items = new ArrayList<>();
-        for (CheckoutProductDto p : request.getProducts()) {
-            OrderItem oi = new OrderItem();
-            oi.setProductId(p.getId());
-            oi.setName(p.getName());
-            oi.setImage(p.getImage());
-            oi.setPrice((p.getOfferPrice() != null) ? p.getOfferPrice() : p.getSalePrice());
-            oi.setQuantity(p.getQuantity());
-            oi.setDescription(p.getDescription());
-            oi.setOrder(order);
-            items.add(oi);
-        }
-        order.setItems(items);
-        logger.info("Order items set for order ID: {}", order.getId());
+        logEntryService.createLog(
+                savedOrder,
+                "PAYMENT_PROCESSED",
+                "Payment processing completed",
+                "Payment Status: " + payment.getStatus(),
+                previousStatus,
+                savedOrder.getStatus().name(),
+                total
+        );
 
-        Order savedOrder = orderRepository.save(order);
-        logger.info("Order saved successfully with ID: {}", savedOrder.getId());
+        // Create outbox event
+        createOutboxEvent(savedOrder);
 
-        OrderEventDto eventDto = mapOrderToEventDto(savedOrder);
-        String payload = convertirDtoAJson(eventDto);
-        logger.debug("OrderEventDto payload: {}", payload);
-
-        OrderOutbox outbox = new OrderOutbox();
-        outbox.setEventType("ORDER_CREATED");
-        outbox.setAggregateType("Order");
-        outbox.setAggregateId(savedOrder.getId());
-        outbox.setPayload(payload);
-        outbox.setCreatedAt(LocalDateTime.now());
-        outbox.setStatus("PENDING");
-        outboxRepository.save(outbox);
-        logger.info("Outbox event created for order ID: {}", savedOrder.getId());
+        logEntryService.createLog(
+                savedOrder,
+                "ORDER_COMPLETED",
+                "Order process completed",
+                "Final Status: " + savedOrder.getStatus(),
+                null,
+                savedOrder.getStatus().name(),
+                total
+        );
 
         return savedOrder;
     }
@@ -120,8 +140,61 @@ public class OrderService {
                 });
     }
 
+    private double calculateTotal(List<CheckoutProductDto> products) {
+        return products.stream()
+                .mapToDouble(p -> {
+                    double price = p.getOfferPrice() != null ? p.getOfferPrice() : p.getSalePrice();
+                    return price * p.getQuantity();
+                }).sum();
+    }
+
+    private Order createInitialOrder(CheckoutRequest request, double total) {
+        Order order = new Order();
+        order.setUserId(request.getUserId());
+        order.setTotal(total);
+        order.setAddress(formatAddress(request.getBilling()));
+        order.setStatus(OrderStatus.PENDING);
+
+        List<OrderItem> items = request.getProducts().stream().map(p -> {
+            OrderItem oi = new OrderItem();
+            oi.setProductId(p.getId());
+            oi.setName(p.getName());
+            oi.setImage(p.getImage());
+            oi.setPrice((p.getOfferPrice() != null) ? p.getOfferPrice() : p.getSalePrice());
+            oi.setQuantity(p.getQuantity());
+            oi.setDescription(p.getDescription());
+            oi.setOrder(order);
+            return oi;
+        }).collect(Collectors.toList());
+        order.setItems(items);
+
+        return order;
+    }
+
+    private void updateOrderStatus(Order order, PaymentResponse payment) {
+        if ("APPROVED".equalsIgnoreCase(payment.getStatus())) {
+            order.setStatus(OrderStatus.PAID);
+        } else {
+            order.setStatus(OrderStatus.REJECTED);
+        }
+        orderRepository.save(order);
+    }
+
+    private void createOutboxEvent(Order order) {
+        OrderEventDto eventDto = mapOrderToEventDto(order);
+        String payload = convertirDtoAJson(eventDto);
+
+        OrderOutbox outbox = new OrderOutbox();
+        outbox.setEventType("ORDER_CREATED");
+        outbox.setAggregateType("Order");
+        outbox.setAggregateId(order.getId());
+        outbox.setPayload(payload);
+        outbox.setCreatedAt(LocalDateTime.now());
+        outbox.setStatus("PENDING");
+        outboxRepository.save(outbox);
+    }
+
     private String formatAddress(CheckoutAddressDto addr) {
-        logger.debug("Formatting address for: {}", addr);
         String line2 = (addr.getLine2() != null) ? addr.getLine2() : "";
         return addr.getLabel() + ", "
                 + addr.getLine1() + " "
@@ -133,7 +206,6 @@ public class OrderService {
     }
 
     private OrderEventDto mapOrderToEventDto(Order order) {
-        logger.debug("Mapping Order to OrderEventDto for order ID: {}", order.getId());
         OrderEventDto dto = new OrderEventDto();
         dto.setId(order.getId());
         dto.setUserId(order.getUserId());
