@@ -1,4 +1,4 @@
-// OrderController.java
+
 package com.microservice.orders.controller;
 
 import com.microservice.orders.dto.CheckoutProductDto;
@@ -39,7 +39,6 @@ public class OrderController {
                     CheckoutProductDto p = new CheckoutProductDto();
                     p.setId(oi.getProductId());
                     p.setName(oi.getName());
-                    p.setImage(oi.getImage());
                     p.setDescription(oi.getDescription());
                     p.setQuantity(oi.getQuantity());
                     p.setOfferPrice(oi.getPrice());
@@ -68,7 +67,6 @@ public class OrderController {
                     CheckoutProductDto p = new CheckoutProductDto();
                     p.setId(oi.getProductId());
                     p.setName(oi.getName());
-                    p.setImage(oi.getImage());
                     p.setDescription(oi.getDescription());
                     p.setQuantity(oi.getQuantity());
                     p.setOfferPrice(oi.getPrice());

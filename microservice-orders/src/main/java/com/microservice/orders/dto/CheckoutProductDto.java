@@ -6,7 +6,6 @@ import lombok.Data;
 public class CheckoutProductDto {
     private String id; // productId
     private String name;
-    private String image;
     private Double salePrice;
     private Double offerPrice;
     private Integer quantity;

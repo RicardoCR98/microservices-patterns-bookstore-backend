@@ -159,7 +159,6 @@ public class OrderService {
             OrderItem oi = new OrderItem();
             oi.setProductId(p.getId());
             oi.setName(p.getName());
-            oi.setImage(p.getImage());
             oi.setPrice((p.getOfferPrice() != null) ? p.getOfferPrice() : p.getSalePrice());
             oi.setQuantity(p.getQuantity());
             oi.setDescription(p.getDescription());
@@ -218,7 +217,6 @@ public class OrderService {
                 OrderItemEventDto iDto = new OrderItemEventDto();
                 iDto.setProductId(item.getProductId());
                 iDto.setName(item.getName());
-                iDto.setImage(item.getImage());
                 iDto.setPrice(item.getPrice());
                 iDto.setQuantity(item.getQuantity());
                 iDto.setDescription(item.getDescription());
