@@ -34,7 +34,6 @@ public class OAuth2UserServiceImpl implements OAuth2UserService<OidcUserRequest,
             user.setIsActive(true);
             user = userRepository.save(user);
             // Crear evento en Outbox
-            // Implementa la lógica similar a AuthService.registerUser si lo deseas
         }
 
         // Vincular el proveedor OAuth2

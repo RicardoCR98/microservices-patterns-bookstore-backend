@@ -44,3 +44,7 @@ resilience4j:
         automaticTransitionFromOpenToHalfOpenEnabled: true
         eventConsumerBufferSize: 10
         # También puedes usar 'slowCallRateThreshold', 'slowCallDurationThreshold', etc.
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000

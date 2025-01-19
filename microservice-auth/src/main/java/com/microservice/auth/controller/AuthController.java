@@ -63,7 +63,6 @@ public class AuthController {
             );
         }
     }
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         logger.info("Login request received for email: {}", request.getEmail());
@@ -86,9 +85,8 @@ public class AuthController {
 
             SecurityContextHolder.getContext().setAuthentication(auth);
 
-            UserDetails userDetails = (UserDetails) auth.getPrincipal();
-
-            String token = jwtUtil.generateToken(userDetails, authUser.getRole().name());
+            // Generar el token usando el userId
+            String token = jwtUtil.generateToken(authUser.getUserId(), authUser.getRole().name());
             Long expirationDate = jwtUtil.getExpirationDateFromToken(token).getTime();
 
             AuthResponse data = new AuthResponse(
@@ -112,6 +110,7 @@ public class AuthController {
             );
         }
     }
+
 
     /**
      * Register Admin
@@ -183,7 +182,7 @@ public class AuthController {
 
             UserDetails userDetails = (UserDetails) auth.getPrincipal();
 
-            String token = jwtUtil.generateToken(userDetails, authUser.getRole().name());
+            String token = jwtUtil.generateToken(authUser.getUserId(), authUser.getRole().name());
             Long expirationDate = jwtUtil.getExpirationDateFromToken(token).getTime();
 
             AuthResponse data = new AuthResponse(

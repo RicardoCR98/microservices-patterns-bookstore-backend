@@ -1,10 +1,9 @@
-
-// ProductController.java
 package com.microservice.books.controller;
 
 import com.microservice.books.dto.ProductsFilterDTO;
 import com.microservice.books.model.Product;
 import com.microservice.books.service.ProductService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +25,7 @@ public class ProductController {
 
     private final ProductService productService;
 
-    // Endpoint: Listar todos los productos
+    // Endpoint: Listar todos los productos (público)
     @GetMapping
     public ResponseEntity<List<Product>> getAllProducts() {
         logger.info("Fetching all products via API");
@@ -34,6 +33,7 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
+    // Endpoint: Filtrar productos (público)
     @PostMapping("/filter")
     public ResponseEntity<Map<String, List<Product>>> filterProducts(@RequestBody ProductsFilterDTO filter) {
         logger.info("Filtering products via API with filter: {}", filter);
@@ -50,27 +50,30 @@ public class ProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Endpoint: Agregar un nuevo producto (SIN portada)
+    // Endpoint: Agregar un nuevo producto (requiere autenticación)
     @PostMapping
-    public ResponseEntity<Product> addProduct(@RequestBody Product product) {
-        logger.info("Adding a new product via API: {}", product);
+    public ResponseEntity<Product> addProduct(@RequestBody Product product, HttpServletRequest request) {
+        String authenticatedUserId = request.getUserPrincipal().getName();
+        product.setUserId(Long.valueOf(authenticatedUserId));
+        logger.info("Adding a new product for user: {}", authenticatedUserId);
         Product savedProduct = productService.addProduct(product);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
     }
 
-    // NUEVO: Agregar un nuevo producto CON portada (byte[])
+    // Endpoint: Agregar un nuevo producto CON portada (requiere autenticación)
     @PostMapping(value = "/with-cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Product> addProductWithCover(
             @RequestPart("product") Product product,
-            @RequestPart("cover") MultipartFile file
+            @RequestPart("cover") MultipartFile file,
+            HttpServletRequest request
     ) {
-        logger.info("Adding a new product with cover via API: {}", product);
+        String authenticatedUserId = request.getUserPrincipal().getName();
+        product.setUserId(Long.valueOf(authenticatedUserId));
+        logger.info("Adding a new product with cover for user: {}", authenticatedUserId);
         try {
-            // Convertir el archivo a bytes y asignarlo al producto
             if (!file.isEmpty()) {
                 product.setCover(file.getBytes());
             }
-            // Guardamos el producto usando el servicio
             Product savedProduct = productService.addProduct(product);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
         } catch (Exception e) {
@@ -79,35 +82,36 @@ public class ProductController {
         }
     }
 
-    // Endpoint: Actualizar un producto
+    // Endpoint: Actualizar un producto (requiere autenticación)
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable String id, @RequestBody Product updatedProduct) {
-        logger.info("Updating product via API with ID: {}", id);
-        return productService.updateProduct(id, updatedProduct)
+    public ResponseEntity<Product> updateProduct(@PathVariable String id, @RequestBody Product updatedProduct, HttpServletRequest request) {
+        String authenticatedUserId = request.getUserPrincipal().getName();
+        logger.info("Updating product with ID: {} by user: {}", id, authenticatedUserId);
+
+        return productService.updateProduct(id, updatedProduct, authenticatedUserId)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.status(HttpStatus.FORBIDDEN).build());
     }
 
-    // NUEVO Endpoint: Actualizar la imagen de un producto existente
+    // Endpoint: Actualizar la imagen de un producto existente (requiere autenticación)
     @PutMapping(value = "/{id}/cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Product> updateCover(
             @PathVariable String id,
-            @RequestPart("cover") MultipartFile file
+            @RequestPart("cover") MultipartFile file,
+            HttpServletRequest request
     ) {
-        logger.info("Updating product cover via API for ID: {}", id);
+        String authenticatedUserId = request.getUserPrincipal().getName();
+        logger.info("Updating product cover for ID: {} by user: {}", id, authenticatedUserId);
         try {
-            Optional<Product> optionalProduct = productService.getProductDetails(id);
+            Optional<Product> optionalProduct = productService.getProductDetails(authenticatedUserId);
             if (optionalProduct.isEmpty()) {
-                logger.warn("Product not found for cover update with ID: {}", id);
-                return ResponseEntity.notFound().build();
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
             Product existingProduct = optionalProduct.get();
             if (!file.isEmpty()) {
                 existingProduct.setCover(file.getBytes());
             }
-            // Guardamos nuevamente el producto
             Product updatedProduct = productService.addProduct(existingProduct);
-            logger.info("Product cover updated successfully for ID: {}", id);
             return ResponseEntity.ok(updatedProduct);
         } catch (Exception e) {
             logger.error("Error updating product cover for ID: {}: {}", id, e.getMessage());
@@ -115,19 +119,19 @@ public class ProductController {
         }
     }
 
-    // Endpoint: Eliminar un producto
+    // Endpoint: Eliminar un producto (requiere autenticación)
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable String id) {
-        logger.info("Deleting product via API with ID: {}", id);
-        if (productService.deleteProduct(id)) {
-            logger.info("Product deleted successfully via API with ID: {}", id);
+    public ResponseEntity<Void> deleteProduct(@PathVariable String id, HttpServletRequest request) {
+        String authenticatedUserId = request.getUserPrincipal().getName();
+        logger.info("Deleting product with ID: {} by user: {}", id, authenticatedUserId);
+
+        if (productService.deleteProduct(id, authenticatedUserId)) {
             return ResponseEntity.noContent().build();
         }
-        logger.warn("Product not found for deletion via API with ID: {}", id);
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
-    // Endpoint: Obtener productos relacionados
+    // Endpoint: Obtener productos relacionados (público)
     @GetMapping("/{id}/related")
     public ResponseEntity<List<Product>> getRelatedProducts(@PathVariable String id) {
         logger.info("Fetching related products via API for ID: {}", id);
@@ -135,7 +139,7 @@ public class ProductController {
         return ResponseEntity.ok(relatedProducts);
     }
 
-    // Obtener todos los libros de un usuario
+    // Endpoint: Obtener todos los productos de un usuario específico (requiere autenticación)
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Product>> getProductsByUserId(@PathVariable Long userId) {
         logger.info("Fetching products via API for user ID: {}", userId);

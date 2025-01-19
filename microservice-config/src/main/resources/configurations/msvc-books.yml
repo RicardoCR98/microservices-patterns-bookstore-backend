@@ -29,3 +29,7 @@ springdoc:
     path: /books-docs/v3/api-docs
   swagger-ui:
     path: /books-docs/swagger-ui.html
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000

@@ -38,6 +38,12 @@ spring:
           predicates:
             - Path=/api/orders/**
 
+        # Ruta para el microservicio de pagos
+        - id: payment-service
+          uri: lb://msvc-payments
+          predicates:
+            - Path=/payment/**
+
         # Rutas personalizadas para la documentación de Swagger
         - id: auth-docs
           uri: lb://msvc-auth

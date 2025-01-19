@@ -12,10 +12,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,7 +34,11 @@ public class OrderService {
     @CircuitBreaker(name = "msvc-payments", fallbackMethod = "paymentFallback")
     public PaymentResponse callPaymentService(PaymentRequest request) {
         logger.info("Calling payment service with request: {}", request);
-
+        // Extraer el token JWT del contexto de seguridad
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null) {
+            logger.info("JWT Token desde SecurityContext: {}", authentication.getCredentials());
+        }
         if (request.getOrderId() != null) {
             logEntryService.createLog(
                     getOrder(request.getOrderId()),
@@ -46,6 +51,7 @@ public class OrderService {
             );
         }
 
+        // Pasar el token al cliente Feign
         return paymentClient.charge(request);
     }
 

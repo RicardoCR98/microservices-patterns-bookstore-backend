@@ -19,6 +19,8 @@ public class MicroserviceOrdersApplication {
 
 	public static void main(String[] args) {
 		Dotenv dotenv = Dotenv.load();
+		// JWT
+		System.setProperty("JWT_SECRET", Objects.requireNonNull(dotenv.get("JWT_SECRET")));
 		// Base de datos
 		System.setProperty("DB_USERNAME", Objects.requireNonNull(dotenv.get("DB_USERNAME")));
 		System.setProperty("DB_PASSWORD", Objects.requireNonNull(dotenv.get("DB_PASSWORD")));

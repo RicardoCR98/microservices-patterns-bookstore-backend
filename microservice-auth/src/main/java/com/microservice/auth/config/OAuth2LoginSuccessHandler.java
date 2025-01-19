@@ -27,13 +27,13 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         // Tu OidcUserService debería retornar un principal que puedas mapear a tu modelo de usuario.
         // Por ejemplo, si en OAuth2UserServiceImpl creas un usuario en la BD y cargas un UserDetails:
 
-        String username = authentication.getName();
-        String token = jwtUtil.generateTokenFromUsername(username);
-
-        // Redirige a tu frontend (puede ser http://localhost:3000) con el token como query param
-        String redirectUrl = "http://localhost:3000/oauth2/redirect?token="
-                + URLEncoder.encode(token, StandardCharsets.UTF_8);
-
-        response.sendRedirect(redirectUrl);
+//        String username = authentication.getName();
+//        String token = jwtUtil.generateTokenFromUsername(username);
+//
+//        // Redirige a tu frontend (puede ser http://localhost:3000) con el token como query param
+//        String redirectUrl = "http://localhost:3000/oauth2/redirect?token="
+//                + URLEncoder.encode(token, StandardCharsets.UTF_8);
+//
+//        response.sendRedirect(redirectUrl);
     }
 }

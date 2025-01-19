@@ -46,7 +46,7 @@ msvc-books:
   url: http://msvc-books:8080
 
 msvc-payments:
-  url: http://msvc-payments:8091
+  url: http://msvc-payments:8080
 
 server:
   port: 8090
@@ -90,3 +90,7 @@ springdoc:
     path: /orders-docs/v3/api-docs
   swagger-ui:
     path: /orders-docs/swagger-ui.html
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000
