@@ -5,7 +5,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "msvc-users") // Nombre del microservicio de usuarios en Eureka
+@FeignClient(name = "msvc-users")
 public interface UsersClient {
 
     @GetMapping("/users/{userId}/notification")

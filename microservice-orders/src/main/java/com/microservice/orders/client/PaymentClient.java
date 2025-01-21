@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 @FeignClient(name = "msvc-payments", fallback = PaymentClientFallback.class)
 public interface PaymentClient {
-
     @PostMapping("/payment/charge")
     PaymentResponse charge(PaymentRequest request);
 }

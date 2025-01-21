@@ -23,19 +23,25 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtUtil jwtUtil;
+
     @Autowired
     private CustomUserDetailsService userDetailsService;
+
+    /**
+     * Rutas públicas en este microservicio que NO requieren autenticación.
+     */
     private static final List<String> WHITE_LIST = List.of(
-            "/auth/register",  // Rutas públicas en el microservicio
+            "/auth/register",
             "/auth/login",
             "/auth/a/login"
     );
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
         String requestURI = request.getRequestURI();
 
@@ -51,21 +57,34 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             jwt = authHeader.substring(7);
-            userId = jwtUtil.extractUserId(jwt); // Extraer el userId (sub)
+            // Extraer el userId (String) desde tu metodo en JwtUtil
+            userId = jwtUtil.extractUserId(jwt);
         }
 
+        // Verificamos que tengamos userId y que aún no esté autenticado en el contexto
         if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails ud = userDetailsService.loadUserByUsername(userId); // Asegúrate de que UserDetailsService cargue por userId
-            if (jwtUtil.validateToken(jwt, Long.parseLong(userId))) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(ud, null, ud.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            try {
+                Long id = Long.parseLong(userId); // Parseamos a Long
+                UserDetails userDetails = userDetailsService.loadUserById(id);
+
+                // Validar el token con el ID
+                if (jwtUtil.validateToken(jwt, id)) {
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            } catch (NumberFormatException e) {
+                // Si userId no era un número válido, simplemente no autenticamos
+                // y dejamos pasar para que devuelva 401 si se requiere
             }
         }
 
         filterChain.doFilter(request, response);
     }
-
-
 }

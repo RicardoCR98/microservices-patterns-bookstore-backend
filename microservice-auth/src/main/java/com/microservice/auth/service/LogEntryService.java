@@ -23,8 +23,9 @@ public class LogEntryService {
             String previousRole,
             String newRole,
             Boolean previousActiveStatus,
-            Boolean newActiveStatus) {
-
+            Boolean newActiveStatus
+    ) {
+        // user JAMÁS debe ser null aquí
         LogEntry logEntry = new LogEntry();
         logEntry.setUser(user);
         logEntry.setAction(action);

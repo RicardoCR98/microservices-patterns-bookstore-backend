@@ -1,23 +1,16 @@
 package com.microservice.auth.service;
 
 import com.microservice.auth.client.UsersClient;
-import com.microservice.auth.model.AuthOutbox;
-import com.microservice.auth.model.AuthUser;
-import com.microservice.auth.model.UserRole;
-import com.microservice.auth.repositories.OutboxRepository;
-import com.microservice.auth.repositories.UserRepository;
-import com.microservice.auth.model.LogEntry;
-import com.microservice.auth.repositories.LogEntryRepository;
+import com.microservice.auth.model.*;
+import com.microservice.auth.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.time.Instant;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -37,9 +30,14 @@ public class AuthService {
     public AuthUser registerUser(String fullName, String email, String password) {
         logger.info("Intentando registrar usuario con email {}", email);
 
-        if (userRepository.findByEmail(email).isPresent()) {
+        Optional<AuthUser> maybeExisting = userRepository.findByEmail(email);
+        if (maybeExisting.isPresent()) {
+            // Obtenemos el usuario real que ya existe
+            AuthUser existingUser = maybeExisting.get();
+
+            // Log con ese usuario
             createLog(
-                    null,
+                    existingUser,
                     "REGISTRATION_FAILED",
                     "Registration attempt with existing email",
                     "Email: " + email,
@@ -62,6 +60,7 @@ public class AuthService {
 
         AuthUser savedUser = userRepository.save(newUser);
 
+        // El "user" es el que acabamos de crear
         createLog(
                 savedUser,
                 "USER_REGISTERED",
@@ -85,9 +84,11 @@ public class AuthService {
     public AuthUser registerAdmin(String fullName, String email, String password) {
         logger.info("Intentando registrar admin con email: {}", email);
 
-        if (userRepository.findByEmail(email).isPresent()) {
+        Optional<AuthUser> maybeExisting = userRepository.findByEmail(email);
+        if (maybeExisting.isPresent()) {
+            AuthUser existingUser = maybeExisting.get();
             createLog(
-                    null,
+                    existingUser,
                     "ADMIN_REGISTRATION_FAILED",
                     "Admin registration attempt with existing email",
                     "Email: " + email,
@@ -126,27 +127,20 @@ public class AuthService {
     }
 
     /**
-     * Busca un usuario por su email.
+     * Busca un usuario por su email. (Se usa en login y en varios sitios.)
+     * Si no existe, lanza excepción. (No se hace log con user=null).
      */
     public AuthUser findUserByEmail(String email) {
         logger.debug("Searching for user by email: {}", email);
+
         AuthUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     logger.error("User not found with email: {}", email);
-                    createLog(
-                            null,
-                            "USER_NOT_FOUND",
-                            "Attempt to find non-existent user by email",
-                            "Email: " + email,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null
-                    );
+                    // NO creamos log con user = null (no hay admin logueado en un login normal).
                     return new IllegalArgumentException("User not found with email: " + email);
                 });
 
+        // Log con el usuario que sí se encontró
         createLog(
                 user,
                 "USER_FOUND",
@@ -163,16 +157,16 @@ public class AuthService {
     }
 
     /**
-     * Retorna todos los usuarios (sin filtrar).
+     * Retorna todos los usuarios, recibiendo QUÉ admin (o usuario) hace la acción.
      */
-    public List<AuthUser> findAll() {
+    public List<AuthUser> findAll(AuthUser currentUser) {
         logger.info("Listando todos los usuarios");
 
         List<AuthUser> allUsers = userRepository.findAll();
 
         if (allUsers.isEmpty()) {
             createLog(
-                    null,
+                    currentUser,
                     "NO_USERS_FOUND",
                     "No users found in the system",
                     null,
@@ -185,7 +179,7 @@ public class AuthService {
             logger.warn("No se encontraron usuarios en el sistema");
         } else {
             createLog(
-                    null,
+                    currentUser,
                     "USERS_FOUND",
                     "Users found in the system",
                     "Total users: " + allUsers.size(),
@@ -202,9 +196,9 @@ public class AuthService {
     }
 
     /**
-     * Retorna todos los usuarios con el rol especificado.
+     * Retorna todos los usuarios con el rol especificado, recibiendo el admin/usuario actual.
      */
-    public List<AuthUser> findAllByRole(UserRole role) {
+    public List<AuthUser> findAllByRole(UserRole role, AuthUser currentUser) {
         logger.info("Listando todos los usuarios con rol: {}", role);
 
         List<AuthUser> usersByRole = userRepository.findAll().stream()
@@ -213,7 +207,7 @@ public class AuthService {
 
         if (usersByRole.isEmpty()) {
             createLog(
-                    null,
+                    currentUser,
                     "NO_USERS_FOUND_BY_ROLE",
                     "No users found with the specified role",
                     "Role: " + role,
@@ -226,7 +220,7 @@ public class AuthService {
             logger.warn("No se encontraron usuarios con el rol: {}", role);
         } else {
             createLog(
-                    null,
+                    currentUser,
                     "USERS_FOUND_BY_ROLE",
                     "Users found with the specified role",
                     "Role: " + role + ", Count: " + usersByRole.size(),
@@ -245,7 +239,14 @@ public class AuthService {
     /**
      * Actualiza los campos permitidos de un usuario por su ID.
      */
-    public AuthUser updateUser(Long userId, Boolean isActive, String fullName, String email, String role, AuthUser currentUser) {
+    public AuthUser updateUser(
+            Long userId,
+            Boolean isActive,
+            String fullName,
+            String email,
+            String role,
+            AuthUser currentUser
+    ) {
         if (!currentUser.getRole().equals(UserRole.ADMIN)) {
             logger.warn("El usuario con ID {} no tiene permisos para actualizar usuarios.", currentUser.getUserId());
             createLog(
@@ -265,6 +266,7 @@ public class AuthService {
         AuthUser targetUser = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     logger.error("No se encontró usuario con ID {}", userId);
+                    // Log con el admin que lo intenta
                     createLog(
                             currentUser,
                             "USER_NOT_FOUND",
@@ -301,23 +303,18 @@ public class AuthService {
 
         if (isActive != null) {
             targetUser.setIsActive(isActive);
-            logger.debug("Cambiado el isActive de {} a {}", userId, isActive);
         }
         if (fullName != null && !fullName.isBlank()) {
             targetUser.setFullName(fullName);
-            logger.debug("Cambiado el fullName de {} a {}", userId, fullName);
         }
         if (email != null && !email.isBlank()) {
             targetUser.setEmail(email);
-            logger.debug("Cambiado el email de {} a {}", userId, email);
         }
         if (role != null && !role.isBlank()) {
             targetUser.setRole(UserRole.valueOf(role));
-            logger.debug("Cambiado el role de {} a {}", userId, role);
         }
 
         AuthUser updatedUser = userRepository.save(targetUser);
-
         logger.info("Usuario con ID {} fue actualizado por el ADMIN con ID {}", userId, currentUser.getUserId());
 
         createLog(
@@ -327,9 +324,9 @@ public class AuthService {
                 "Updated fields: isActive, fullName, email, role",
                 currentUser.getUserId(),
                 previousRole,
-                targetUser.getRole().name(),
+                updatedUser.getRole().name(),
                 previousActiveStatus,
-                targetUser.getIsActive()
+                updatedUser.getIsActive()
         );
 
         return updatedUser;
@@ -426,6 +423,9 @@ public class AuthService {
         logger.info("Evento Outbox (USER_REGISTERED) creado para userId: {}", savedUser.getUserId());
     }
 
+    /**
+     * Metodo interno para crear logs sin usar null.
+     */
     private void createLog(
             AuthUser user,
             String action,
@@ -437,6 +437,7 @@ public class AuthService {
             Boolean previousActiveStatus,
             Boolean newActiveStatus
     ) {
+        // user debe ser != null aquí
         LogEntry logEntry = new LogEntry();
         logEntry.setUser(user);
         logEntry.setAction(action);
@@ -448,6 +449,7 @@ public class AuthService {
         logEntry.setPreviousActiveStatus(previousActiveStatus);
         logEntry.setNewActiveStatus(newActiveStatus);
         logEntry.setCreatedAt(Instant.now());
+
         logEntryRepository.save(logEntry);
     }
 }

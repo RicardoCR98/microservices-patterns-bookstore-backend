@@ -1,5 +1,3 @@
-
-// AuthController.java
 package com.microservice.auth.controller;
 
 import com.microservice.auth.config.JwtUtil;
@@ -16,15 +14,12 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.*;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.http.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -43,18 +38,26 @@ public class AuthController {
         logger.info("Register request received for email: {}", request.getEmail());
 
         try {
-            AuthUser newUser = authService.registerUser(request.getFullName(), request.getEmail(), request.getPassword());
+            AuthUser newUser = authService.registerUser(
+                    request.getFullName(),
+                    request.getEmail(),
+                    request.getPassword()
+            );
             logger.info("User registered successfully with ID: {}", newUser.getUserId());
 
             return ResponseEntity.ok(
-                    new ApiResponse<>(true, "User registered successfully", new AuthResponse(
-                            newUser.getUserId(),
-                            newUser.getFullName(),
-                            null, // No se genera token en el registro
-                            newUser.getRole().name(),
-                            null, // No se genera fecha de expiración
-                            newUser.getIsActive()
-                    ))
+                    new ApiResponse<>(
+                            true,
+                            "User registered successfully",
+                            new AuthResponse(
+                                    newUser.getUserId(),
+                                    newUser.getFullName(),
+                                    null, // No se genera token en el registro
+                                    newUser.getRole().name(),
+                                    null, // No se genera fecha de expiración
+                                    newUser.getIsActive()
+                            )
+                    )
             );
         } catch (IllegalArgumentException e) {
             logger.error("Error registering user: {}", e.getMessage());
@@ -63,11 +66,13 @@ public class AuthController {
             );
         }
     }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         logger.info("Login request received for email: {}", request.getEmail());
 
         try {
+            // Si no existe, se lanza excepción en authService.findUserByEmail
             AuthUser authUser = authService.findUserByEmail(request.getEmail());
 
             if (!authUser.getIsActive()) {
@@ -80,7 +85,10 @@ public class AuthController {
             AuthenticationManager authManager = authConfig.getAuthenticationManager();
 
             Authentication auth = authManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
             );
 
             SecurityContextHolder.getContext().setAuthentication(auth);
@@ -111,10 +119,8 @@ public class AuthController {
         }
     }
 
-
     /**
-     * Register Admin
-     * Requiere Rol ADMIN para acceder.
+     * Register Admin - Requiere Rol ADMIN para acceder.
      */
     @PostMapping("/a/register")
     @PreAuthorize("hasRole('ADMIN')")
@@ -122,7 +128,11 @@ public class AuthController {
         logger.info("Admin register request received for email: {}", request.getEmail());
 
         try {
-            AuthUser newUser = authService.registerAdmin(request.getFullName(), request.getEmail(), request.getPassword());
+            AuthUser newUser = authService.registerAdmin(
+                    request.getFullName(),
+                    request.getEmail(),
+                    request.getPassword()
+            );
             logger.info("Admin registered successfully with ID: {}", newUser.getUserId());
 
             return ResponseEntity.ok(
@@ -148,8 +158,7 @@ public class AuthController {
     }
 
     /**
-     * Login Admin
-     * NO requiere Rol ADMIN para acceder.
+     * Login Admin (NO requiere Rol ADMIN para acceder).
      */
     @PostMapping("/a/login")
     public ResponseEntity<?> loginAdmin(@Valid @RequestBody LoginRequest request) {
@@ -175,13 +184,15 @@ public class AuthController {
             AuthenticationManager authManager = authConfig.getAuthenticationManager();
 
             Authentication auth = authManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
             );
 
             SecurityContextHolder.getContext().setAuthentication(auth);
 
-            UserDetails userDetails = (UserDetails) auth.getPrincipal();
-
+            // Generar token
             String token = jwtUtil.generateToken(authUser.getUserId(), authUser.getRole().name());
             Long expirationDate = jwtUtil.getExpirationDateFromToken(token).getTime();
 

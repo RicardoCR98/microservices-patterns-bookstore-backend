@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.time.Instant;
 
 @Entity
@@ -17,12 +18,15 @@ public class LogEntry {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Relación obligatoria (NOT NULL) con un usuario real.
+     */
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "userId", nullable = false) // Apunta a "userId" en AuthUser
+    @JoinColumn(name = "user_id", referencedColumnName = "userId", nullable = false)
     private AuthUser user;
 
     @Column(nullable = false)
-    private String action;  // "USER_REGISTERED", "USER_UPDATED", "USER_DELETED", etc.
+    private String action; // "USER_REGISTERED", "USER_UPDATED", etc.
 
     @Column(nullable = false)
     private String description;
@@ -30,11 +34,9 @@ public class LogEntry {
     @Column(columnDefinition = "TEXT")
     private String additionalDetails;
 
-    private Long performedByUserId;  // ID del usuario que realizó la acción (útil para acciones admin)
-
+    private Long performedByUserId;
     private String previousRole;
     private String newRole;
-
     private Boolean previousActiveStatus;
     private Boolean newActiveStatus;
 
@@ -43,6 +45,8 @@ public class LogEntry {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = Instant.now();
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
     }
 }

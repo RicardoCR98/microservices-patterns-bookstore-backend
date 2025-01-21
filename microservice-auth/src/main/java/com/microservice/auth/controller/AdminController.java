@@ -36,7 +36,12 @@ public class AdminController {
     public ResponseEntity<?> getUsersWithRoleUser() {
         log.info("Petición GET /admin/role/user: Listando usuarios con rol USER");
 
-        List<AuthUser> users = authService.findAllByRole(UserRole.USER);
+        // Quién está realizando la petición (ADMIN)
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AuthUser currentUser = authService.findUserByEmail(authentication.getName());
+
+        // Llamamos al metodo que recibe el admin
+        List<AuthUser> users = authService.findAllByRole(UserRole.USER, currentUser);
 
         log.debug("Se encontraron {} usuarios con rol USER", users.size());
         return ResponseEntity.ok(
@@ -53,9 +58,13 @@ public class AdminController {
     public ResponseEntity<?> getAllUsers() {
         log.info("Petición GET /admin/all: Listando todos los usuarios (requiere rol ADMIN)");
 
-        List<AuthUser> users = authService.findAll();
-        log.debug("Se encontraron {} usuarios en total", users.size());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        AuthUser currentUser = authService.findUserByEmail(authentication.getName());
 
+        // Nuevo metodo que requiere el admin
+        List<AuthUser> users = authService.findAll(currentUser);
+
+        log.debug("Se encontraron {} usuarios en total", users.size());
         return ResponseEntity.ok(
                 new ApiResponse<>(true, "Lista de todos los usuarios", users)
         );
@@ -77,13 +86,9 @@ public class AdminController {
         log.debug("Datos para actualización: {}", updateRequest);
 
         try {
-            // Obtenemos al usuario que está haciendo la petición
+            // Usuario que hace la petición
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String currentUserEmail = authentication.getName();
-
-            log.debug("El usuario autenticado que hace la petición es: {}", currentUserEmail);
-
-            // Buscamos al usuario autenticado en la BD
             AuthUser currentUser = authService.findUserByEmail(currentUserEmail);
 
             // Actualizamos el usuario objetivo
@@ -93,7 +98,7 @@ public class AdminController {
                     updateRequest.getFullName(),
                     updateRequest.getEmail(),
                     updateRequest.getRole().name(),
-                    currentUser // Pasamos el usuario que ejecuta la acción
+                    currentUser
             );
 
             log.info("Usuario con ID {} actualizado correctamente por {}", id, currentUserEmail);
@@ -121,18 +126,11 @@ public class AdminController {
         log.info("Petición DELETE /admin/{}: Eliminar usuario con ID {}", id, id);
 
         try {
-            // Obtenemos al usuario que está haciendo la petición
+            // Usuario que hace la petición
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-            if (authentication != null) {
-                log.info("Principal: {}", authentication.getPrincipal());
-                log.info("Authorities: {}", authentication.getAuthorities());
-            }
             String currentUserEmail = authentication.getName();
-
             log.debug("El usuario autenticado que hace la petición es: {}", currentUserEmail);
 
-            // Buscamos al usuario autenticado en la BD
             AuthUser currentUser = authService.findUserByEmail(currentUserEmail);
 
             // Eliminamos al usuario objetivo
