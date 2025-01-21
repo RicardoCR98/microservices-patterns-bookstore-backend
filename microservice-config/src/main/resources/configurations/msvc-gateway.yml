@@ -8,58 +8,87 @@ spring:
         locator:
           enabled: false
       routes:
-        # Rutas para el microservicio de autenticación
+        # ---------------------------------------------------------------
+        # Rutas para el microservicio de autenticación (msvc-auth)
         - id: auth-service
           uri: lb://msvc-auth
           predicates:
             - Path=/auth/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: authServiceCircuitBreaker
+                fallbackUri: forward:/fallback/auth
 
-        # Rutas para la administración del microservicio de autenticación
+        # Administración del microservicio de autenticación
         - id: auth-service-admin-routes
           uri: lb://msvc-auth
           predicates:
             - Path=/admin/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: authServiceAdminCircuitBreaker
+                fallbackUri: forward:/fallback/auth-admin
 
-        # Rutas para el microservicio de productos (books)
+        # Microservicio de productos (msvc-books)
         - id: book-service
           uri: lb://msvc-books
           predicates:
             - Path=/api/products/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: bookServiceCircuitBreaker
+                fallbackUri: forward:/fallback/books
 
-        # Rutas para el microservicio de usuarios
+        # Microservicio de usuarios (msvc-users)
         - id: user-service
           uri: lb://msvc-users
           predicates:
             - Path=/users/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: userServiceCircuitBreaker
+                fallbackUri: forward:/fallback/users
 
-        # Rutas para el microservicio de órdenes
+        # Microservicio de órdenes (msvc-orders)
         - id: order-service
           uri: lb://msvc-orders
           predicates:
             - Path=/api/orders/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: orderServiceCircuitBreaker
+                fallbackUri: forward:/fallback/orders
 
-        # Ruta para el microservicio de pagos
+        # Microservicio de pagos (msvc-payments)
         - id: payment-service
           uri: lb://msvc-payments
           predicates:
             - Path=/payment/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: paymentServiceCircuitBreaker
+                fallbackUri: forward:/fallback/payments
 
-        # Rutas personalizadas para la documentación de Swagger
+        # ---------------------------------------------------------------
+        # Rutas personalizadas para Swagger
         - id: auth-docs
           uri: lb://msvc-auth
           predicates:
             - Path=/auth-docs/**
-
         - id: users-docs
           uri: lb://msvc-users
           predicates:
             - Path=/users-docs/**
-
         - id: books-docs
           uri: lb://msvc-books
           predicates:
             - Path=/books-docs/**
-
         - id: orders-docs
           uri: lb://msvc-orders
           predicates:
@@ -90,3 +119,54 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
+
+# ---------------------------------------------------------------
+# Configuración Resilience4j
+resilience4j:
+  circuitbreaker:
+    configs:
+      # Configuración predeterminada (default)
+      default:
+        registerHealthIndicator: true
+        ringBufferSizeInClosedState: 10
+        ringBufferSizeInHalfOpenState: 5
+        waitDurationInOpenState: 20s
+        failureRateThreshold: 40
+
+      # Configuración específica para servicios críticos de autenticación
+      authConfig:
+        registerHealthIndicator: true
+        ringBufferSizeInClosedState: 20
+        ringBufferSizeInHalfOpenState: 10
+        waitDurationInOpenState: 15s
+        failureRateThreshold: 30
+
+      # Configuración específica para servicios de pago
+      paymentConfig:
+        registerHealthIndicator: true
+        ringBufferSizeInClosedState: 15
+        ringBufferSizeInHalfOpenState: 7
+        waitDurationInOpenState: 30s
+        failureRateThreshold: 50
+
+      # Configuración específica para servicios de órdenes
+      ordersConfig:
+        registerHealthIndicator: true
+        ringBufferSizeInClosedState: 10
+        ringBufferSizeInHalfOpenState: 5
+        waitDurationInOpenState: 25s
+        failureRateThreshold: 40
+
+    instances:
+      authServiceCircuitBreaker:
+        baseConfig: authConfig
+      authServiceAdminCircuitBreaker:
+        baseConfig: authConfig
+      bookServiceCircuitBreaker:
+        baseConfig: default
+      userServiceCircuitBreaker:
+        baseConfig: default
+      orderServiceCircuitBreaker:
+        baseConfig: ordersConfig
+      paymentServiceCircuitBreaker:
+        baseConfig: paymentConfig

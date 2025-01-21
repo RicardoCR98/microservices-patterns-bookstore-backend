@@ -46,6 +46,10 @@ public class AuthUser {
     @Builder.Default
     private Timestamp updatedAt = new Timestamp(System.currentTimeMillis());
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isDeleted = false; // Nuevo campo para soft delete
+
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = new Timestamp(System.currentTimeMillis());

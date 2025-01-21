@@ -35,8 +35,9 @@ public class ProductController {
 
     // Endpoint: Filtrar productos (público)
     @PostMapping("/filter")
-    public ResponseEntity<Map<String, List<Product>>> filterProducts(@RequestBody ProductsFilterDTO filter) {
-        logger.info("Filtering products via API with filter: {}", filter);
+    public ResponseEntity<Map<String, List<Product>>> filterProducts(@RequestBody ProductsFilterDTO filter, HttpServletRequest request) {
+        String authenticatedUserId = request.getUserPrincipal().getName();
+        logger.info("Filtering products via API with filter: {} by user: {}", filter, authenticatedUserId);
         List<Product> filteredProducts = productService.filterProducts(filter);
         return ResponseEntity.ok(Map.of("data", filteredProducts));
     }

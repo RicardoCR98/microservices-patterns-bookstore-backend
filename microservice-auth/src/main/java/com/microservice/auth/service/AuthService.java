@@ -162,7 +162,8 @@ public class AuthService {
     public List<AuthUser> findAll(AuthUser currentUser) {
         logger.info("Listando todos los usuarios");
 
-        List<AuthUser> allUsers = userRepository.findAll();
+        // Usando findAllByIsDeletedFalse para filtrar usuarios no eliminados
+        List<AuthUser> allUsers = userRepository.findAllByIsDeletedFalse();
 
         if (allUsers.isEmpty()) {
             createLog(
@@ -195,13 +196,14 @@ public class AuthService {
         return allUsers;
     }
 
+
     /**
      * Retorna todos los usuarios con el rol especificado, recibiendo el admin/usuario actual.
      */
     public List<AuthUser> findAllByRole(UserRole role, AuthUser currentUser) {
         logger.info("Listando todos los usuarios con rol: {}", role);
 
-        List<AuthUser> usersByRole = userRepository.findAll().stream()
+        List<AuthUser> usersByRole = userRepository.findAllByIsDeletedFalse().stream()
                 .filter(user -> user.getRole().equals(role))
                 .toList();
 
@@ -333,9 +335,10 @@ public class AuthService {
     }
 
     /**
-     * Elimina un usuario.
+     * Elimina un usuario de manera lógica (soft delete).
      */
     public void deleteUser(Long userId, AuthUser currentUser) {
+        // Verificar que el usuario actual tiene rol ADMIN
         if (!currentUser.getRole().equals(UserRole.ADMIN)) {
             logger.warn("El usuario con ID {} no tiene permisos para eliminar usuarios.", currentUser.getUserId());
             createLog(
@@ -352,6 +355,7 @@ public class AuthService {
             throw new IllegalArgumentException("No tienes permisos para eliminar usuarios.");
         }
 
+        // Buscar el usuario objetivo
         AuthUser targetUser = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     logger.error("No se encontró usuario con ID {}", userId);
@@ -369,6 +373,7 @@ public class AuthService {
                     return new IllegalArgumentException("No existe el usuario con ID: " + userId);
                 });
 
+        // No permitir que un administrador elimine a otro administrador
         if (targetUser.getRole().equals(UserRole.ADMIN) && !targetUser.getUserId().equals(currentUser.getUserId())) {
             logger.warn("El admin con ID {} intentó eliminar a otro admin con ID {}. No está permitido.",
                     currentUser.getUserId(), targetUser.getUserId());
@@ -386,21 +391,27 @@ public class AuthService {
             throw new IllegalArgumentException("No puedes eliminar a otro administrador.");
         }
 
-        userRepository.delete(targetUser);
-        logger.info("Usuario con ID {} eliminado correctamente por el ADMIN con ID {}", userId, currentUser.getUserId());
+        // Realizar Soft Delete
+        targetUser.setIsDeleted(true); // Marcar como eliminado
+        targetUser.setIsActive(false); // Opcional: Desactivar el usuario
+        userRepository.save(targetUser);
 
+        logger.info("Usuario con ID {} marcado como eliminado por el ADMIN con ID {}", userId, currentUser.getUserId());
+
+        // Registrar la acción en los logs
         createLog(
                 targetUser,
                 "USER_DELETED",
-                "User successfully deleted",
-                "Deleted userId: " + userId,
+                "Usuario marcado como eliminado",
+                "Eliminado por admin ID: " + currentUser.getUserId(),
                 currentUser.getUserId(),
                 targetUser.getRole().name(),
                 null,
                 targetUser.getIsActive(),
-                null
+                false
         );
     }
+
 
     private void createUserProfileAndOutboxEvent(AuthUser savedUser) {
         usersClient.createUserProfile(new com.microservice.auth.dto.UserProfileRequest(
