@@ -18,8 +18,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 public class SecurityConfig {
 
     private final JwtRequestFilter jwtRequestFilter;
-    private final OAuth2UserServiceImpl oAuth2UserServiceImpl;
-    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -45,13 +43,6 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                // Configuración de OAuth2 Login
-                .oauth2Login(oauth2 -> oauth2
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .oidcUserService(oAuth2UserServiceImpl)
-                        )
-                        .successHandler(oAuth2LoginSuccessHandler)
-                )
 //                .oauth2Login(auth->auth.disable())
 
                 // Stateless: no se mantienen sesiones del lado del servidor

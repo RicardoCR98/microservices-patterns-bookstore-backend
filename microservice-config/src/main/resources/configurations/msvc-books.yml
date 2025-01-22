@@ -1,7 +1,7 @@
 spring:
   data:
     mongodb:
-      uri: mongodb://localhost:27017/booksdb
+      uri: mongodb://mongo:27017/booksdb
 #      auto-index-creation: true
   jackson:
     serialization:
@@ -13,8 +13,8 @@ eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
+    serviceUrl:
+      defaultZone: http://eureka-server:8761/eureka/
 
 server:
   port: 8088

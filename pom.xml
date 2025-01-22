@@ -6,7 +6,6 @@
                              https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <!-- Versión del modelo de POM -->
     <modelVersion>4.0.0</modelVersion>
-
     <!-- Información del proyecto padre -->
     <groupId>com.microservice</groupId> <!-- Actualizado para coincidir con los módulos hijos -->
     <artifactId>microservices-pattern-bookstore</artifactId>
@@ -136,5 +135,19 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+
     </build>
 </project>

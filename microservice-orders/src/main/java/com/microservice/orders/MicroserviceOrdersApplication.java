@@ -19,6 +19,9 @@ public class MicroserviceOrdersApplication {
 
 	public static void main(String[] args) {
 		Dotenv dotenv = Dotenv.load();
+		//RabbitMQ
+		System.setProperty("RABBITMQ_USER", Objects.requireNonNull(dotenv.get("RABBITMQ_USER")));
+		System.setProperty("RABBITMQ_PASSWORD", Objects.requireNonNull(dotenv.get("RABBITMQ_PASSWORD")));
 		// JWT
 		System.setProperty("JWT_SECRET", Objects.requireNonNull(dotenv.get("JWT_SECRET")));
 		// Base de datos

@@ -6,7 +6,7 @@ spring:
       retry:
         enabled: true
   datasource:
-    url: jdbc:postgresql://localhost:5432/Orders_DB
+    url: jdbc:postgresql://postgres:5432/Orders_DB
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -20,17 +20,17 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   # Configuración de RabbitMQ
   rabbitmq:
-    host: localhost
+    host: rabbitmq
     port: 5672
-    username: guest
-    password: guest
+    username: ${RABBITMQ_USER}
+    password: ${RABBITMQ_PASSWORD}
 
 eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
+    serviceUrl:
+      defaultZone: http://eureka-server:8761/eureka/
 
 feign:
   client:

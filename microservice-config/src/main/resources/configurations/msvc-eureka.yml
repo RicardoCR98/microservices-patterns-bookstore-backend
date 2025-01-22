@@ -1,21 +1,23 @@
+server:
+  port: 8761
+
 spring:
   application:
     name: msvc-eureka
 
 eureka:
   instance:
-    hostname: localhost
+    hostname: eureka-server
     instanceId: ${spring.application.name}:${server.port}
 
   client:
     register-with-eureka: false
     fetch-registry: false
+    serviceUrl:
+      defaultZone: "http://eureka-server:8761/eureka/"
 
   server:
     enable-self-preservation: true
-
-server:
-  port: 8761
 
 management:
   endpoints:

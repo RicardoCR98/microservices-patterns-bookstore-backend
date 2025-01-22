@@ -2,7 +2,7 @@ spring:
   application:
     name: msvc-payments
   datasource:
-    url: jdbc:postgresql://localhost:5432/Payments_DB
+    url: jdbc:postgresql://postgres:5432/Payments_DB
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -20,8 +20,8 @@ paypal:
 
 eureka:
   client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka
+    serviceUrl:
+      defaultZone: http://eureka-server:8761/eureka
 
 management:
   endpoints:

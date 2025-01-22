@@ -22,16 +22,6 @@ public class MicroserviceAuthApplication {
 		// JWT
 		System.setProperty("JWT_SECRET", Objects.requireNonNull(dotenv.get("JWT_SECRET")));
 
-		// OAuth2 Google
-		System.setProperty("GOOGLE_CLIENT_ID", Objects.requireNonNull(dotenv.get("GOOGLE_CLIENT_ID")));
-		System.setProperty("GOOGLE_CLIENT_SECRET", Objects.requireNonNull(dotenv.get("GOOGLE_CLIENT_SECRET")));
-		System.setProperty("GOOGLE_REDIRECT_URI", Objects.requireNonNull(dotenv.get("GOOGLE_REDIRECT_URI")));
-
-		// OAuth2 Facebook
-		System.setProperty("FACEBOOK_CLIENT_ID", Objects.requireNonNull(dotenv.get("FACEBOOK_CLIENT_ID")));
-		System.setProperty("FACEBOOK_CLIENT_SECRET", Objects.requireNonNull(dotenv.get("FACEBOOK_CLIENT_SECRET")));
-		System.setProperty("FACEBOOK_REDIRECT_URI", Objects.requireNonNull(dotenv.get("FACEBOOK_REDIRECT_URI")));
-
 		SpringApplication.run(MicroserviceAuthApplication.class, args);
 	}
 }

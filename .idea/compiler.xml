@@ -14,16 +14,25 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
         </processorPath>
         <module name="microservice-gateway" />
         <module name="microservice-payments" />
         <module name="microservice-auth" />
         <module name="microservice-config" />
-        <module name="microservice-notifications" />
         <module name="microservice-orders" />
         <module name="microservice-books" />
-        <module name="microservice-eureka" />
         <module name="microservice-users" />
+        <module name="microservice-eureka" />
+      </profile>
+      <profile name="Annotation profile for microservice-notifications" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
+        </processorPath>
+        <module name="microservice-notifications" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>

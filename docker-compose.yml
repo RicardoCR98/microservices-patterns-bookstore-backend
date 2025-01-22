@@ -1,0 +1,293 @@
+services:
+  ################################################################
+  # Bases de datos
+  ################################################################
+  # ========================
+  # Base de datos PostgreSQL
+  # ========================
+  postgres:
+    image: postgres:17.1
+    container_name: postgres_db
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      # Copia tu script init.sql a /docker-entrypoint-initdb.d/ dentro del contenedor
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - .env:/app/.env
+    networks:
+      - bookstore_net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===============
+  # Mongo Database
+  # ===============
+  mongo:
+    image: mongo:latest
+    container_name: mongo_db
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./docker/mongo/init.js:/docker-entrypoint-initdb.d/init.js
+      - .env:/app/.env
+    networks:
+      - bookstore_net
+
+  ################################################################
+  # RabbitMQ
+  ################################################################
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"   # Puerto de mensajería
+      - "15672:15672" # Interfaz web
+    networks:
+      - bookstore_net
+    volumes:
+      - .env:/app/.env
+  ################################################################
+  # Config Server
+  ################################################################
+  config-service:
+    build:
+      context: ./microservice-config
+      dockerfile: Dockerfile
+    container_name: config-service
+    ports:
+      - "8888:8888"
+    environment:
+      # Variables de entorno que requiera tu config server
+      - SPRING_PROFILES_ACTIVE=native
+    networks:
+      - bookstore_net
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://config-service:8888/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  ################################################################
+  # Eureka server
+  ################################################################
+  eureka-server:
+    build:
+      context: ./microservice-eureka
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    depends_on:
+      config-service:
+        condition: service_healthy
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_CONFIG_IMPORT=configserver:http://config-service:8888
+    networks:
+      - bookstore_net
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://eureka-server:8761/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  ################################################################
+  # Api gateway
+  ################################################################
+  gateway:
+    build:
+      context: ./microservice-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    depends_on:
+      config-service:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_CONFIG_IMPORT=configserver:http://config-service:8888
+#      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - bookstore_net
+    volumes:
+      - .env:/app/.env
+
+  ################################################################
+  # Auth service
+  ################################################################
+  msvc-auth:
+    build:
+      context: ./microservice-auth
+      dockerfile: Dockerfile
+    container_name: msvc-auth
+    depends_on:
+      config-service:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_CONFIG_IMPORT=configserver:http://config-service:8888
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - bookstore_net
+    volumes:
+      - .env:/app/.env
+  ################################################################
+  # User service
+  ################################################################
+  msvc-users:
+    build:
+      context: ./microservice-users
+      dockerfile: Dockerfile
+    container_name: msvc-users
+    depends_on:
+      config-service:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      mongo:
+        condition: service_completed_successfully
+    ports:
+      - "8089:8089"
+    environment:
+      - SPRING_CONFIG_IMPORT=configserver:http://config-service:8888
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - bookstore_net
+    volumes:
+      - .env:/app/.env
+  ################################################################
+  # Books Service
+  ################################################################
+  msvc-books:
+    build:
+      context: ./microservice-books
+      dockerfile: Dockerfile
+    container_name: msvc-books
+    depends_on:
+      config-service:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      mongo:
+        condition: service_completed_successfully
+    ports:
+      - "8088:8088"
+    environment:
+      - SPRING_CONFIG_IMPORT=configserver:http://config-service:8888
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - bookstore_net
+    volumes:
+      - .env:/app/.env
+
+  ################################################################
+  # Order Service
+  ################################################################
+  msvc-orders:
+    build:
+      context: ./microservice-orders
+      dockerfile: Dockerfile
+    container_name: msvc-orders
+    depends_on:
+      config-service:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "8090:8090"
+    environment:
+      - SPRING_CONFIG_IMPORT=configserver:http://config-service:8888
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - RABBITMQ_HOST=rabbitmq
+    networks:
+      - bookstore_net
+    volumes:
+      - .env:/app/.env
+
+  ################################################################
+  # Payment Service
+  ################################################################
+  msvc-payments:
+    build:
+      context: ./microservice-payments
+      dockerfile: Dockerfile
+    container_name: msvc-payments
+    depends_on:
+      config-service:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      msvc-orders:
+        condition: service_healthy
+    ports:
+      - "8091:8091"
+    environment:
+      - SPRING_CONFIG_IMPORT=configserver:http://config-service:8888
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID}
+      - PAYPAL_CLIENT_SECRET=${PAYPAL_CLIENT_SECRET}
+    networks:
+      - bookstore_net
+    volumes:
+      - .env:/app/.env
+  ################################################################
+  # Notification Service
+  ################################################################
+  msvc-notifications:
+    build:
+      context: ./microservice-notifications
+      dockerfile: Dockerfile
+    container_name: msvc-notifications
+    depends_on:
+      config-service:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "8092:8092"
+    environment:
+      - SPRING_CONFIG_IMPORT=configserver:http://config-service:8888
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - RABBITMQ_HOST=rabbitmq
+    networks:
+      - bookstore_net
+    volumes:
+      - .env:/app/.env
+  ################################################################
+  # Red de Contenedores
+  ################################################################
+networks:
+  bookstore_net:
+    driver: bridge

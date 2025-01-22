@@ -16,6 +16,9 @@ public class MicroserviceNotificationsApplication {
 
 	public static void main(String[] args) {
 		Dotenv dotenv = Dotenv.load();
+		// RabbitMQ
+		System.setProperty("RABBITMQ_USER", Objects.requireNonNull(dotenv.get("RABBITMQ_USER")));
+		System.setProperty("RABBITMQ_PASSWORD", Objects.requireNonNull(dotenv.get("RABBITMQ_PASSWORD")));
 		// Email
 		System.setProperty("MAIL_USERNAME", Objects.requireNonNull(dotenv.get("MAIL_USERNAME")));
 		System.setProperty("MAIL_PASSWORD", Objects.requireNonNull(dotenv.get("MAIL_PASSWORD")));
