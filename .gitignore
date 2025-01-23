@@ -26,3 +26,4 @@ replay_pid*
 # Variables de entorno
 .env
 
+.idea/*

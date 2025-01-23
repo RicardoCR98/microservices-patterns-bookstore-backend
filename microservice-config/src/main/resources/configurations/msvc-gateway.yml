@@ -136,10 +136,10 @@ resilience4j:
       # Configuración específica para servicios críticos de autenticación
       authConfig:
         registerHealthIndicator: true
-        ringBufferSizeInClosedState: 20
+        ringBufferSizeInClosedState: 50
         ringBufferSizeInHalfOpenState: 10
-        waitDurationInOpenState: 15s
-        failureRateThreshold: 30
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
 
       # Configuración específica para servicios de pago
       paymentConfig:
