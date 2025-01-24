@@ -1,5 +1,6 @@
 package com.microservice.auth.controller;
 
+import com.microservice.auth.dto.AdminResponse;
 import com.microservice.auth.dto.ApiResponse;
 import com.microservice.auth.dto.UpdateUserRequest;
 import com.microservice.auth.model.AuthUser;
@@ -58,15 +59,28 @@ public class AdminController {
     public ResponseEntity<?> getAllUsers() {
         log.info("Petición GET /admin/all: Listando todos los usuarios (requiere rol ADMIN)");
 
+        // Obtener admin autenticado
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         AuthUser currentUser = authService.findUserByEmail(authentication.getName());
 
         // Nuevo metodo que requiere el admin
         List<AuthUser> users = authService.findAll(currentUser);
 
+        // Convertir a AdminResponse
+        List<AdminResponse> adminResponses = users.stream().map(user -> new AdminResponse(
+                user.getUserId(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getRole().name(),
+                user.getIsActive(),
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
+                user.getIsDeleted()
+        )).toList();
+
         log.debug("Se encontraron {} usuarios en total", users.size());
         return ResponseEntity.ok(
-                new ApiResponse<>(true, "Lista de todos los usuarios", users)
+                new ApiResponse<>(true, "Lista de todos los usuarios", adminResponses)
         );
     }
 
