@@ -1,6 +1,10 @@
 # Usar una imagen base de OpenJDK 21 (puede ser slim, alpine, etc.)
 FROM openjdk:21-jdk-slim
 
+# Instalar curl
+RUN apt-get update && apt-get install -y iputils-ping curl
+
+
 # Crear directorio de trabajo en el contenedor
 WORKDIR /app
 
