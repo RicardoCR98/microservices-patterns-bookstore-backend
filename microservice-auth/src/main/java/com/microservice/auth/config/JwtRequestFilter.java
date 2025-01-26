@@ -58,7 +58,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             userId = jwtUtil.extractUserId(jwt);
         }
 
-        // Verificamos que tengamos userId y que aún no esté autenticado en el contexto
+        // Verificamos que tengamos userId y que aun no esté autenticado en el contexto
         if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 Long id = Long.parseLong(userId); // Parseamos a Long
@@ -77,8 +77,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             } catch (NumberFormatException e) {
-                // Si userId no era un número válido, simplemente no autenticamos
-                // y dejamos pasar para que devuelva 401 si se requiere
             }
         }
 

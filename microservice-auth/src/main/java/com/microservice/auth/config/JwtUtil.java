@@ -30,6 +30,7 @@ public class JwtUtil {
      */
     public String generateToken(Long userId, String role) {
         return Jwts.builder()
+                //Ojo para mi yo futuro: el subject es el id del usuario
                 .setSubject(String.valueOf(userId)) // Usar el ID numérico del usuario como "sub"
                 .claim("role", role) // Agregar el rol como un claim
                 .setIssuedAt(new Date()) // Fecha de emisión

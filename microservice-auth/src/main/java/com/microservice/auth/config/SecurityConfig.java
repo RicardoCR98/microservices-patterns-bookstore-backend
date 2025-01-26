@@ -24,7 +24,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Deshabilitamos CSRF ya que manejamos tokens JWT
+                // Deshabilitamos CSRF ya que manejamos tokens JWT y son STATELESS bro
                 .csrf(csrf -> csrf.disable())
 
                 // Configuración de autorización de rutas
