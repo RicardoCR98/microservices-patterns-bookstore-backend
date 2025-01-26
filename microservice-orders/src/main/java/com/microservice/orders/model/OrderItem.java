@@ -15,9 +15,11 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String productId;
+    @Column(length = 255)
     private String name;
     private Double price;
     private Integer quantity;
+    @Column(columnDefinition = "text")
     private String description;
 
     @ManyToOne

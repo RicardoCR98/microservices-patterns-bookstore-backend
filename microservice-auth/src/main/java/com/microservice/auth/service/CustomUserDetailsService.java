@@ -3,6 +3,7 @@ package com.microservice.auth.service;
 import com.microservice.auth.controller.AuthController;
 import com.microservice.auth.model.AuthUser;
 import com.microservice.auth.repositories.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
@@ -13,12 +14,12 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 
 @Service
+@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     /**
      * Se usa en el proceso normal de login (cuando Spring Security

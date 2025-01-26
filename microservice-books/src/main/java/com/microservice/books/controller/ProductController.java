@@ -22,7 +22,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProductController {
     private static final Logger logger = LoggerFactory.getLogger(ProductController.class);
-
     private final ProductService productService;
 
     // Endpoint: Listar todos los productos (público)
