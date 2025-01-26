@@ -118,7 +118,7 @@ public class AdminController {
             log.info("Usuario con ID {} actualizado correctamente por {}", id, currentUserEmail);
 
             return ResponseEntity.ok(
-                    new ApiResponse<>(true, "Usuario actualizado con éxito", updatedUser)
+                    new ApiResponse<>(true, "Usuario actualizado con éxito", null)
             );
 
         } catch (IllegalArgumentException e) {
