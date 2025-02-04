@@ -99,10 +99,10 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
     serviceUrl:
-      defaultZone: http://eureka-server:8761/eureka/
+      defaultZone: ${EUREKA_SERVER_URL}
 
 server:
-  port: 8080
+  port: ${GATEWAY_PORT}
 
 management:
   endpoints:
@@ -112,7 +112,7 @@ management:
 
 jwt:
   secret: ${JWT_SECRET}
-  expiration: 3600000
+  expiration: ${JWT_EXPIRATION}
 
 springdoc:
   api-docs:

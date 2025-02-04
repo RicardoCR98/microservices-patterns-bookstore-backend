@@ -6,7 +6,7 @@ spring:
       retry:
         enabled: true
   datasource:
-    url: jdbc:postgresql://postgres:5432/Orders_DB
+    url: ${ORDERDB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -20,8 +20,8 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   # Configuración de RabbitMQ
   rabbitmq:
-    host: rabbitmq
-    port: 5672
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
     username: ${RABBITMQ_USER}
     password: ${RABBITMQ_PASSWORD}
 
@@ -30,7 +30,7 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
     serviceUrl:
-      defaultZone: http://eureka-server:8761/eureka/
+      defaultZone: ${EUREKA_SERVER_URL}
 
 feign:
   client:
@@ -43,13 +43,13 @@ feign:
     enabled: true
 
 msvc-books:
-  url: http://msvc-books:8080
+  url: ${MSVC_BOOKS_URL}
 
 msvc-payments:
-  url: http://msvc-payments:8080
+  url: ${MSVC_PAYMENTS_URL}
 
 server:
-  port: 8090
+  port: ${ORDER_PORT}
 
 management:
   endpoints:
@@ -65,9 +65,9 @@ logging:
     com.microservice.orders: DEBUG
 app:
   rabbitmq:
-    exchange: orders-exchange
-    queue: orders-queue
-    routingKey: orders.created
+    exchange: ${EXCHANGE_NAME}
+    queue: ${QUEUE_NAME}
+    routingKey: ${ROUTING_KEY}
 
 # Configuración de Resilience4j
 resilience4j:
@@ -93,4 +93,4 @@ springdoc:
 
 jwt:
   secret: ${JWT_SECRET}
-  expiration: 86400000
+  expiration: ${JWT_EXPIRATION}

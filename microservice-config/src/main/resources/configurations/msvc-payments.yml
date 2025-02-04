@@ -2,7 +2,7 @@ spring:
   application:
     name: msvc-payments
   datasource:
-    url: jdbc:postgresql://postgres:5432/Payments_DB
+    url: ${PAYMENTDB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -16,12 +16,12 @@ spring:
 paypal:
   client-id: ${PAYPAL_CLIENT_ID}
   client-secret: ${PAYPAL_CLIENT_SECRET}
-  mode: sandbox
+  mode: ${PAYPAL_MODE}
 
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://eureka-server:8761/eureka
+      defaultZone: ${EUREKA_SERVER_URL}
 
 management:
   endpoints:
@@ -30,7 +30,7 @@ management:
         include: "*"
 
 server:
-    port: 8091 #No cambiar de puerto porque no se va a usar con el gateway
+    port: ${PAYMENT_PORT} #No cambiar del 8091 de puerto porque no se va a usar con el gateway
 
 resilience4j:
   circuitbreaker:
@@ -43,8 +43,7 @@ resilience4j:
         failureRateThreshold: 50
         automaticTransitionFromOpenToHalfOpenEnabled: true
         eventConsumerBufferSize: 10
-        # También puedes usar 'slowCallRateThreshold', 'slowCallDurationThreshold', etc.
 
 jwt:
   secret: ${JWT_SECRET}
-  expiration: 86400000
+  expiration: ${JWT_EXPIRATION}

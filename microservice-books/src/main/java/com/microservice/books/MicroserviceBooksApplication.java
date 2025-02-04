@@ -1,21 +1,20 @@
 package com.microservice.books;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-
-import java.util.Objects;
 
 @SpringBootApplication
 @EnableDiscoveryClient
 public class MicroserviceBooksApplication {
 
 	public static void main(String[] args) {
-		Dotenv dotenv = Dotenv.load();
-		// JWT
-		System.setProperty("JWT_SECRET", Objects.requireNonNull(dotenv.get("JWT_SECRET")));
+		String jwtSecret = System.getenv("JWT_SECRET");
+		if (jwtSecret == null) {
+			throw new IllegalStateException("JWT_SECRET no está definido en el entorno para msvc-books");
+		}
+		System.setProperty("JWT_SECRET", jwtSecret);
+
 		SpringApplication.run(MicroserviceBooksApplication.class, args);
 	}
-
 }

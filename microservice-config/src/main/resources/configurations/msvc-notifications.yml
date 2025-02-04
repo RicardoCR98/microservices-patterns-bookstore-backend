@@ -1,5 +1,5 @@
 server:
-  port: 8092
+  port: ${NOTIFICATIONS_PORT}
 
 spring:
   application:
@@ -7,8 +7,8 @@ spring:
 
   # Configuración RabbitMQ
   rabbitmq:
-    host: rabbitmq
-    port: 5672
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
     username: ${RABBITMQ_USER}
     password: ${RABBITMQ_PASSWORD}
 
@@ -40,9 +40,9 @@ logging:
 
 app:
   rabbitmq:
-    exchange: orders-exchange
-    queue: orders-queue
-    routingKey: orders.created
+    exchange: ${EXCHANGE_NAME}
+    queue: ${QUEUE_NAME}
+    routingKey: ${ROUTING_KEY}
 
 management:
   endpoints:
@@ -55,4 +55,4 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
     serviceUrl:
-      defaultZone: http://eureka-server:8761/eureka/
+      defaultZone: ${EUREKA_SERVER_URL}

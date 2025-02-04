@@ -1,7 +1,7 @@
 spring:
   data:
     mongodb:
-      uri: mongodb://mongo:27017/usersdb
+      uri: ${USERSDB_URI}
   jackson:
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
@@ -13,10 +13,10 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
     serviceUrl:
-      defaultZone: http://eureka-server:8761/eureka/
+      defaultZone: ${EUREKA_SERVER_URL}
 
 server:
-  port: 8089
+  port: ${USERS_PORT}
 
 management:
   endpoints:

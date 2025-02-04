@@ -3,4 +3,4 @@ spring:
     name: msvc-books
 
   config:
-    import: "configserver:http://config-service:8888"
+    import: "configserver:${CONFIG_SERVICE_URL}"
