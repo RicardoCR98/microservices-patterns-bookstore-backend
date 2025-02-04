@@ -20,7 +20,7 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     private final TemplateEngine templateEngine;
 
-    @Value("${spring.mail.username}")
+    @Value("${MAIL_USERNAME}")
     private String fromEmail;
 
     /**

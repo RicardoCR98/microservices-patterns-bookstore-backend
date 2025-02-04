@@ -15,10 +15,10 @@ import java.util.Date;
 public class JwtUtil {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
 
-    @Value("${jwt.secret}")
+    @Value("${JWT_SECRET}")
     private String secretKey;
 
-    @Value("${jwt.expiration}")
+    @Value("${JWT_EXPIRATION}")
     private Long expiration;
 
     /**

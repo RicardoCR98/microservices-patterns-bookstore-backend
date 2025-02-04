@@ -18,7 +18,7 @@ public class NotificationListener {
     private final UsersClient usersClient;
     private final ObjectMapper objectMapper;
 
-    @RabbitListener(queues = "${app.rabbitmq.queue:orders-queue}")
+    @RabbitListener(queues = "${QUEUE_NAME}")
     @RabbitHandler
     public void receiveMessage(String message) {
         try {

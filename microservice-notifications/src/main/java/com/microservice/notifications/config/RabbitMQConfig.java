@@ -10,13 +10,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-    @Value("${app.rabbitmq.exchange:orders-exchange}")
+    @Value("${EXCHANGE_NAME}")
     private String exchangeName;
 
-    @Value("${app.rabbitmq.queue:orders-queue}")
+    @Value("${QUEUE_NAME}")
     private String queueName;
 
-    @Value("${app.rabbitmq.routingKey:orders.created}")
+    @Value("${ROUTING_KEY}")
     private String routingKey;
 
     // 1. Declarar Exchange

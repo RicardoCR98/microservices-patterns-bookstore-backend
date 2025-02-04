@@ -20,10 +20,10 @@ public class OutboxProcessor {
     private final OrderOutboxRepository outboxRepository;
     private final RabbitTemplate rabbitTemplate;
 
-    @Value("${app.rabbitmq.exchange:orders-exchange}")
+    @Value("${EXCHANGE_NAME}")
     private String exchange;
 
-    @Value("${app.rabbitmq.routingKey:orders.created}")
+    @Value("${ROUTING_KEY}")
     private String routingKey;
 
     /**

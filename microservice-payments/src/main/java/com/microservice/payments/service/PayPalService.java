@@ -23,11 +23,11 @@ public class PayPalService {
 
     private static final Logger logger = LoggerFactory.getLogger(PayPalService.class);
 
-    @Value("${paypal.client-id}")
+    @Value("${PAYPAL_CLIENT_ID}")
     private String clientId;
-    @Value("${paypal.client-secret}")
+    @Value("${PAYPAL_CLIENT_SECRET}")
     private String clientSecret;
-    @Value("${paypal.mode}")
+    @Value("${PAYPAL_MODE}")
     private String mode;
 
     private final ObjectMapper mapper = new ObjectMapper();
